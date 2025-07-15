@@ -1,6 +1,6 @@
 {
-  "name": "@toolplex-ai/client",
-  "version": "1.0.8",
+  "name": "@toolplex/client",
+  "version": "0.1.0",
   "author": "ToolPlex LLC",
   "license": "SEE LICENSE IN LICENSE",
   "description": "The official ToolPlex client for AI agent tool discovery and execution",
@@ -13,7 +13,7 @@
     "dist"
   ],
   "publishConfig": {
-    "access": "restricted"
+    "access": "package"
   },
   "scripts": {
     "build": "node scripts/generate-version-file.js && rm -rf dist && tsc && node scripts/add-shebang.js",
