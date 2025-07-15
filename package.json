@@ -13,7 +13,7 @@
     "dist"
   ],
   "publishConfig": {
-    "access": "package"
+    "access": "public"
   },
   "scripts": {
     "build": "node scripts/generate-version-file.js && rm -rf dist && tsc && node scripts/add-shebang.js",
