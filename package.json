@@ -1,0 +1,70 @@
+{
+  "name": "@toolplex-ai/client",
+  "version": "1.0.8",
+  "author": "ToolPlex LLC",
+  "license": "SEE LICENSE IN LICENSE",
+  "description": "The official ToolPlex client for AI agent tool discovery and execution",
+  "type": "module",
+  "main": "dist/mcp-server/index.js",
+  "bin": {
+    "toolplex-client": "./dist/mcp-server/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "scripts": {
+    "build": "node scripts/generate-version-file.js && rm -rf dist && tsc && node scripts/add-shebang.js",
+    "start": "node ./dist/mcp-server/index.js",
+    "watch": "tsc --watch",
+    "lint": "eslint 'src/**/*.{ts,js}'",
+    "lint:fix": "eslint 'src/**/*.{ts,js}' --fix",
+    "format": "prettier --write 'src/**/*.{ts,js,json,md}'"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai-agent",
+    "ai-tools",
+    "tool-discovery",
+    "agent-automation",
+    "claude",
+    "anthropic",
+    "openai",
+    "toolplex",
+    "workflow-automation",
+    "mcp-server",
+    "ai-integration"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.7.0",
+    "@types/node": "^22.13.11",
+    "@types/node-fetch": "^2.6.12",
+    "@types/which": "^3.0.4",
+    "callsite": "^1.0.0",
+    "command-exists": "^1.2.9",
+    "dotenv": "^16.5.0",
+    "env-paths": "^3.0.0",
+    "glob": "^11.0.1",
+    "node-fetch": "^3.3.2",
+    "typescript": "^5.8.2",
+    "which": "^5.0.0",
+    "winston-daily-rotate-file": "^5.0.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.24.0",
+    "@types/callsite": "^1.0.34",
+    "@types/command-exists": "^1.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.29.0",
+    "@typescript-eslint/parser": "^8.29.0",
+    "eslint": "^9.24.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.2.6",
+    "prettier": "^3.5.3",
+    "ts-node": "^10.9.2",
+    "typescript-eslint": "^8.29.0"
+  }
+}
