@@ -8,6 +8,7 @@ export interface ToolplexServerConfig {
   dev: boolean;
   apiKey: string;
   clientMode: ClientMode;
+  clientName: string;
   logLevel: LogLevel;
 }
 

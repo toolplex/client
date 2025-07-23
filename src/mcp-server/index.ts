@@ -15,6 +15,7 @@ const isDev: boolean = process.env.DEV === "true";
 const apiKey: string | undefined = process.env.TOOLPLEX_API_KEY;
 const clientMode: ClientMode =
   (process.env.TOOLPLEX_CLIENT_MODE as ClientMode) || "standard";
+const clientName: string = process.env.CLIENT_NAME || "unknown";
 const logLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) || "info";
 
 if (!apiKey) {
@@ -25,6 +26,7 @@ const config: ToolplexServerConfig = {
   dev: isDev,
   apiKey,
   clientMode,
+  clientName,
   logLevel,
 };
 

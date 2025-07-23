@@ -68,6 +68,7 @@ export class ToolplexApiService {
       Accept: "application/json",
       "x-api-key": this.clientContext.apiKey,
       "x-client-mode": this.clientContext.clientMode,
+      "x-client-name": this.clientContext.clientName,
       "x-client-version": this.clientContext.clientVersion,
     };
   }

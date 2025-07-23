@@ -56,6 +56,7 @@ export async function serve(config: ToolplexServerConfig): Promise<void> {
   clientContext.dev = config.dev;
   clientContext.apiKey = config.apiKey;
   clientContext.clientMode = config.clientMode;
+  clientContext.clientName = config.clientName;
   clientContext.clientVersion = clientVersion;
 
   await Registry.init(clientContext);

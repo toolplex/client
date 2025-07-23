@@ -14,6 +14,7 @@ export class ClientContext {
   private _permissions: ClientPermissions | null = null;
   private _flags: ClientFlags | null = null;
   private _isOrgUser: boolean | null = null;
+  private _clientName: string | null = null;
 
   public get sessionId(): string {
     if (!this._sessionId) {
@@ -57,6 +58,17 @@ export class ClientContext {
 
   public set clientMode(mode: "standard" | "restricted") {
     this._clientMode = mode;
+  }
+
+  public get clientName(): string {
+    if (!this._clientName) {
+      throw new Error("Client name not set - ToolPlex not initialized");
+    }
+    return this._clientName;
+  }
+
+  public set clientName(name: string) {
+    this._clientName = name;
   }
 
   public get llmContext(): LLMContext {
@@ -125,7 +137,8 @@ export class ClientContext {
       this._clientVersion &&
       this._permissions &&
       this._flags &&
-      this._isOrgUser !== null
+      this._isOrgUser !== null &&
+      this._clientName
     );
   }
 }
