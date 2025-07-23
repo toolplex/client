@@ -1,15 +1,15 @@
-import { getEnhancedPath } from '../../shared/enhancedPath.js';
-import which from 'which';
+import { getEnhancedPath } from "../../shared/enhancedPath.js";
+import which from "which";
 
 const INSTALL_HINTS: Record<string, string> = {
-  uvx: 'Install uvx: https://docs.astral.sh/uv/getting-started/installation/',
-  uv: 'Install uv: https://docs.astral.sh/uv/getting-started/installation/',
+  uvx: "Install uvx: https://docs.astral.sh/uv/getting-started/installation/",
+  uv: "Install uv: https://docs.astral.sh/uv/getting-started/installation/",
   python:
-    'Install Python: https://www.python.org/downloads/. Or check if you have `python3` installed.',
+    "Install Python: https://www.python.org/downloads/. Or check if you have `python3` installed.",
   python3:
-    'Install Python: https://www.python.org/downloads/. Or check if you have `python` installed.',
-  node: 'Install Node.js: https://nodejs.org/en/download/',
-  npx: 'Install npx (comes with Node.js): https://nodejs.org/en/download/',
+    "Install Python: https://www.python.org/downloads/. Or check if you have `python` installed.",
+  node: "Install Node.js: https://nodejs.org/en/download/",
+  npx: "Install npx (comes with Node.js): https://nodejs.org/en/download/",
 };
 
 export class RuntimeCheck {
@@ -29,7 +29,7 @@ export class RuntimeCheck {
         throw new Error(`Missing required command: '${command}'.\n👉 ${hint}`);
       }
       throw new Error(
-        `Command '${command}' not found in enhanced PATH. Please install it manually or check your config.`
+        `Command '${command}' not found in enhanced PATH. Please install it manually or check your config.`,
       );
     }
   }

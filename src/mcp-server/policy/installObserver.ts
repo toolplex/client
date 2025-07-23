@@ -8,19 +8,19 @@ class InstallObserver {
 
   // Record an install action on a server
   public recordInstall(serverId: string): void {
-    this.recordAction(serverId, 'install');
+    this.recordAction(serverId, "install");
   }
 
   // Record an uninstall action on a server
   public recordUninstall(serverId: string): void {
-    this.recordAction(serverId, 'uninstall');
+    this.recordAction(serverId, "uninstall");
   }
 
   // Check if a server has been installed
   public wasServerInstalled(serverId: string): boolean {
     return (
       this.serverInstallActions.has(serverId) &&
-      this.serverInstallActions.get(serverId)!.has('install')
+      this.serverInstallActions.get(serverId)!.has("install")
     );
   }
 
@@ -28,7 +28,7 @@ class InstallObserver {
   public wasServerUninstalled(serverId: string): boolean {
     return (
       this.serverInstallActions.has(serverId) &&
-      this.serverInstallActions.get(serverId)!.has('uninstall')
+      this.serverInstallActions.get(serverId)!.has("uninstall")
     );
   }
 

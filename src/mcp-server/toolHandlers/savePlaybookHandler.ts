@@ -1,13 +1,15 @@
-import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { FileLogger } from '../../shared/fileLogger.js';
-import { SavePlaybookParams } from '../../shared/mcpServerTypes.js';
-import Registry from '../registry.js';
+import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { FileLogger } from "../../shared/fileLogger.js";
+import { SavePlaybookParams } from "../../shared/mcpServerTypes.js";
+import Registry from "../registry.js";
 
 const logger = FileLogger;
 
-export async function handleSavePlaybook(params: SavePlaybookParams): Promise<CallToolResult> {
+export async function handleSavePlaybook(
+  params: SavePlaybookParams,
+): Promise<CallToolResult> {
   const startTime = Date.now();
-  await logger.info('Handling save playbook request');
+  await logger.info("Handling save playbook request");
   await logger.debug(`Playbook params: ${JSON.stringify(params)}`);
 
   const apiService = Registry.getToolplexApiService();
@@ -18,13 +20,13 @@ export async function handleSavePlaybook(params: SavePlaybookParams): Promise<Ca
 
   try {
     // Check if the client is in restricted mode
-    if (clientContext.clientMode === 'restricted') {
-      throw new Error('Playbook functionality is disabled in restricted mode.');
+    if (clientContext.clientMode === "restricted") {
+      throw new Error("Playbook functionality is disabled in restricted mode.");
     }
 
     // Check if read-only mode is enabled
     if (clientContext.permissions.enable_read_only_mode) {
-      throw new Error('Saving playbooks is disabled in read-only mode');
+      throw new Error("Saving playbooks is disabled in read-only mode");
     }
 
     // Enforce playbook policy before saving
@@ -47,12 +49,12 @@ export async function handleSavePlaybook(params: SavePlaybookParams): Promise<Ca
       keywords,
       requirements,
       source_playbook_id,
-      fork_reason
+      fork_reason,
     );
 
     await logger.info(`Playbook created successfully with ID: ${response.id}`);
 
-    await telemetryLogger.log('client_save_playbook', {
+    await telemetryLogger.log("client_save_playbook", {
       success: true,
       log_context: {
         playbook_id: response.id,
@@ -62,13 +64,13 @@ export async function handleSavePlaybook(params: SavePlaybookParams): Promise<Ca
     });
 
     return {
-      role: 'system',
+      role: "system",
       content: [
         {
-          type: 'text',
+          type: "text",
           text: promptsCache
-            .getPrompt('save_playbook_success')
-            .replace('{PLAYBOOK_ID}', response.id),
+            .getPrompt("save_playbook_success")
+            .replace("{PLAYBOOK_ID}", response.id),
         },
       ],
     };
@@ -76,18 +78,20 @@ export async function handleSavePlaybook(params: SavePlaybookParams): Promise<Ca
     const errorMessage = error instanceof Error ? error.message : String(error);
     await logger.error(`Failed to create playbook: ${errorMessage}`);
 
-    await telemetryLogger.log('client_save_playbook', {
+    await telemetryLogger.log("client_save_playbook", {
       success: false,
       pii_sanitized_error_message: errorMessage,
       latency_ms: Date.now() - startTime,
     });
 
     return {
-      role: 'system',
+      role: "system",
       content: [
         {
-          type: 'text',
-          text: promptsCache.getPrompt('save_playbook_failure').replace('{ERROR}', errorMessage),
+          type: "text",
+          text: promptsCache
+            .getPrompt("save_playbook_failure")
+            .replace("{ERROR}", errorMessage),
         },
       ],
     };

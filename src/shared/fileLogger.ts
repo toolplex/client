@@ -1,10 +1,10 @@
-import path from 'path';
-import envPaths from 'env-paths';
-import winston from 'winston';
-import callsite from 'callsite';
-import DailyRotateFile from 'winston-daily-rotate-file';
+import path from "path";
+import envPaths from "env-paths";
+import winston from "winston";
+import callsite from "callsite";
+import DailyRotateFile from "winston-daily-rotate-file";
 
-const paths = envPaths('ToolPlex', { suffix: '' });
+const paths = envPaths("ToolPlex", { suffix: "" });
 export const logDir = path.join(paths.log);
 
 function getCallingModule(): string {
@@ -13,14 +13,14 @@ function getCallingModule(): string {
     const fileName = stack[i].getFileName();
     if (
       fileName &&
-      !fileName.includes('node_modules') &&
-      !fileName.includes('fileLogger') &&
-      !fileName.includes('callsite')
+      !fileName.includes("node_modules") &&
+      !fileName.includes("fileLogger") &&
+      !fileName.includes("callsite")
     ) {
       return path.basename(fileName, path.extname(fileName));
     }
   }
-  return 'unknown';
+  return "unknown";
 }
 
 export class FileLogger {
@@ -32,13 +32,13 @@ export class FileLogger {
     if (this.logger) return;
     this.processName = processName;
 
-    const logLevel = process.env.LOG_LEVEL || 'info';
+    const logLevel = process.env.LOG_LEVEL || "info";
 
     this.transport = new DailyRotateFile({
       dirname: logDir,
       filename: `ToolPlex-${processName}-%DATE%.log`,
-      datePattern: 'YYYY-MM-DD',
-      maxFiles: '7d',
+      datePattern: "YYYY-MM-DD",
+      maxFiles: "7d",
       zippedArchive: false,
       level: logLevel,
     });
@@ -48,8 +48,8 @@ export class FileLogger {
       format: winston.format.combine(
         winston.format.timestamp(),
         winston.format.printf(({ level, message, timestamp, module }) => {
-          return `${timestamp} [${level.toUpperCase()}] ${module || 'unknown'} - ${message}`;
-        })
+          return `${timestamp} [${level.toUpperCase()}] ${module || "unknown"} - ${message}`;
+        }),
       ),
       defaultMeta: {},
       transports: [this.transport],
@@ -62,24 +62,24 @@ export class FileLogger {
   }
 
   static info(message: string) {
-    this.log('info', message);
+    this.log("info", message);
   }
 
   static warn(message: string) {
-    this.log('warn', message);
+    this.log("warn", message);
   }
 
   static error(message: string) {
-    this.log('error', message);
+    this.log("error", message);
   }
 
   static debug(message: string) {
-    this.log('debug', message);
+    this.log("debug", message);
   }
 
   static async flush(): Promise<void> {
     return new Promise((resolve) => {
-      this.transport.on('finish', resolve);
+      this.transport.on("finish", resolve);
       this.logger.end();
     });
   }

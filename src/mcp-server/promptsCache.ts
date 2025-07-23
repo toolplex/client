@@ -21,7 +21,7 @@ export class PromptsCache {
    */
   public getPrompt(key: string): string {
     if (!this._prompts) {
-      throw new Error('PromptsCache not initialized');
+      throw new Error("PromptsCache not initialized");
     }
 
     const prompt = this._prompts[key];
@@ -37,7 +37,7 @@ export class PromptsCache {
    */
   public getVersion(): string {
     if (!this._version) {
-      throw new Error('PromptsCache not initialized');
+      throw new Error("PromptsCache not initialized");
     }
     return this._version;
   }

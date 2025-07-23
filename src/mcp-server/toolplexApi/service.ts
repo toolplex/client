@@ -1,5 +1,5 @@
-import fetch, { Response as FetchResponse } from 'node-fetch';
-import { FileLogger } from '../../shared/fileLogger.js';
+import fetch, { Response as FetchResponse } from "node-fetch";
+import { FileLogger } from "../../shared/fileLogger.js";
 import {
   CreatePlaybookRequest,
   CreatePlaybookResponse,
@@ -13,11 +13,11 @@ import {
   LogTelemetryBatchResponse,
   InitRequest,
   InitResponse,
-} from './types.js';
-import os from 'os';
-import { ClientContext } from '../clientContext.js';
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { PlaybookAction } from '../../shared/mcpServerTypes.js';
+} from "./types.js";
+import os from "os";
+import { ClientContext } from "../clientContext.js";
+import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { PlaybookAction } from "../../shared/mcpServerTypes.js";
 
 const logger = FileLogger;
 
@@ -33,10 +33,10 @@ export class ToolplexApiService {
 
   constructor(clientContext: ClientContext) {
     if (!clientContext.apiKey) {
-      throw new Error('API key not set in client context');
+      throw new Error("API key not set in client context");
     }
     if (!clientContext.clientVersion) {
-      throw new Error('Client version not set in client context');
+      throw new Error("Client version not set in client context");
     }
 
     this.clientContext = clientContext;
@@ -51,7 +51,7 @@ export class ToolplexApiService {
   }
 
   private getBaseUrl(dev: boolean): string {
-    return dev ? 'http://localhost:8080' : 'https://api.toolplex.ai';
+    return dev ? "http://localhost:8080" : "https://api.toolplex.ai";
   }
 
   private async handleFetchResponse<T>(response: FetchResponse): Promise<T> {
@@ -64,18 +64,18 @@ export class ToolplexApiService {
 
   private getBaseHeaders(): Record<string, string> {
     return {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      'x-api-key': this.clientContext.apiKey,
-      'x-client-mode': this.clientContext.clientMode,
-      'x-client-version': this.clientContext.clientVersion,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "x-api-key": this.clientContext.apiKey,
+      "x-client-mode": this.clientContext.clientMode,
+      "x-client-version": this.clientContext.clientVersion,
     };
   }
 
   private getHeadersWithSession(): Record<string, string> {
     return {
       ...this.getBaseHeaders(),
-      'x-session-id': this.clientContext.sessionId,
+      "x-session-id": this.clientContext.sessionId,
     };
   }
 
@@ -86,7 +86,7 @@ export class ToolplexApiService {
       };
 
       const response = await fetch(`${this.baseUrl}/init`, {
-        method: 'POST',
+        method: "POST",
         headers: this.getBaseHeaders(),
         body: JSON.stringify(initRequest),
       });
@@ -101,12 +101,14 @@ export class ToolplexApiService {
   public async getTools() {
     try {
       const response = await fetch(`${this.baseUrl}/tools`, {
-        method: 'POST',
+        method: "POST",
         headers: this.getBaseHeaders(),
         body: JSON.stringify({}),
       });
 
-      return this.handleFetchResponse<{ _version: string; tools: Tool[] }>(response);
+      return this.handleFetchResponse<{ _version: string; tools: Tool[] }>(
+        response,
+      );
     } catch (err) {
       await logger.error(`Error fetching tool definitions: ${err}`);
       throw err;
@@ -115,19 +117,19 @@ export class ToolplexApiService {
 
   public async logTelemetryEvents(
     events: Array<{
-      eventType: LogTelemetryRequest['event_type'];
-      data: Partial<Omit<LogTelemetryRequest, 'event_type'>>;
-    }>
+      eventType: LogTelemetryRequest["event_type"];
+      data: Partial<Omit<LogTelemetryRequest, "event_type">>;
+    }>,
   ): Promise<LogTelemetryBatchResponse> {
     try {
       const response = await fetch(`${this.baseUrl}/telemetry/log/batch`, {
-        method: 'POST',
+        method: "POST",
         headers: this.getHeadersWithSession(),
         body: JSON.stringify(
           events.map((event) => ({
             event_type: event.eventType,
             ...event.data,
-          }))
+          })),
         ),
       });
 
@@ -139,13 +141,13 @@ export class ToolplexApiService {
   }
 
   public async lookupEntity(
-    entityType: 'server' | 'playbook' | 'feedback',
-    entityId: string
+    entityType: "server" | "playbook" | "feedback",
+    entityId: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
     try {
       const response = await fetch(`${this.baseUrl}/lookup-entity`, {
-        method: 'POST',
+        method: "POST",
         headers: this.getHeadersWithSession(),
         body: JSON.stringify({
           entity_type: entityType,
@@ -163,8 +165,8 @@ export class ToolplexApiService {
   public async search(
     query: string,
     expandedKeywords: string[] = [],
-    filter = 'all',
-    size = 10
+    filter = "all",
+    size = 10,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<{ mcp_servers?: any[]; playbooks?: any[] }> {
     const requestBody = {
@@ -178,7 +180,7 @@ export class ToolplexApiService {
 
     try {
       const response = await fetch(`${this.baseUrl}/search`, {
-        method: 'POST',
+        method: "POST",
         headers: this.getHeadersWithSession(),
         body: JSON.stringify(requestBody),
       });
@@ -188,8 +190,12 @@ export class ToolplexApiService {
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (await response.json()) as { mcp_servers?: any[]; playbooks?: any[] };
+      return (await response.json()) as {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        mcp_servers?: any[];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        playbooks?: any[];
+      };
     } catch (err) {
       await logger.error(`Error during search request: ${err}`);
       throw err;
@@ -203,7 +209,7 @@ export class ToolplexApiService {
     keywords?: string[],
     requirements?: string[],
     sourcePlaybookId?: string,
-    forkReason?: string
+    forkReason?: string,
   ): Promise<CreatePlaybookResponse> {
     const requestBody: CreatePlaybookRequest = {
       description,
@@ -218,7 +224,7 @@ export class ToolplexApiService {
 
     try {
       const response = await fetch(`${this.baseUrl}/playbooks/create`, {
-        method: 'POST',
+        method: "POST",
         headers: this.getHeadersWithSession(),
         body: JSON.stringify(requestBody),
       });
@@ -233,7 +239,7 @@ export class ToolplexApiService {
   public async logPlaybookUsage(
     playbookId: string,
     success: boolean,
-    errorMessage?: string
+    errorMessage?: string,
   ): Promise<LogPlaybookUsageResponse> {
     const requestBody: LogPlaybookUsageRequest = {
       playbook_id: playbookId,
@@ -244,7 +250,7 @@ export class ToolplexApiService {
 
     try {
       const response = await fetch(`${this.baseUrl}/playbooks/log-usage`, {
-        method: 'POST',
+        method: "POST",
         headers: this.getHeadersWithSession(),
         body: JSON.stringify(requestBody),
       });
@@ -257,11 +263,11 @@ export class ToolplexApiService {
   }
 
   public async submitFeedback(
-    targetType: 'server' | 'playbook',
+    targetType: "server" | "playbook",
     targetId: string,
-    vote: 'up' | 'down',
+    vote: "up" | "down",
     message?: string,
-    securityAssessment?: SecurityAssessment
+    securityAssessment?: SecurityAssessment,
   ): Promise<SubmitFeedbackResponse> {
     const requestBody: SubmitFeedbackRequest = {
       target_type: targetType,
@@ -275,7 +281,7 @@ export class ToolplexApiService {
 
     try {
       const response = await fetch(`${this.baseUrl}/feedback/submit`, {
-        method: 'POST',
+        method: "POST",
         headers: this.getHeadersWithSession(),
         body: JSON.stringify(requestBody),
       });
@@ -290,7 +296,7 @@ export class ToolplexApiService {
   public async getFeedbackSummary(): Promise<FeedbackSummaryResponse> {
     try {
       const response = await fetch(`${this.baseUrl}/feedback/summarize`, {
-        method: 'GET',
+        method: "GET",
         headers: this.getHeadersWithSession(),
       });
 

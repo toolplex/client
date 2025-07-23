@@ -1,4 +1,4 @@
-import { ClientContext } from '../clientContext.js';
+import { ClientContext } from "../clientContext.js";
 
 export class ServerPolicy {
   private clientContext: ClientContext;
@@ -6,7 +6,9 @@ export class ServerPolicy {
 
   constructor(clientContext: ClientContext) {
     this.clientContext = clientContext;
-    this.blockedMcpServersSet = new Set(clientContext.flags.blocked_mcp_servers || []);
+    this.blockedMcpServersSet = new Set(
+      clientContext.flags.blocked_mcp_servers || [],
+    );
   }
 
   /**
@@ -17,7 +19,7 @@ export class ServerPolicy {
   public enforceBlockedServerPolicy(serverId: string): void {
     if (this.blockedMcpServersSet.has(serverId)) {
       throw new Error(
-        `Cannot use blocked server "${serverId}. Questions? Contact support@toolplex.ai"`
+        `Cannot use blocked server "${serverId}. Questions? Contact support@toolplex.ai"`,
       );
     }
   }
@@ -29,9 +31,13 @@ export class ServerPolicy {
    */
   public enforceAllowedServerPolicy(serverId: string): void {
     const allowedServers = this.clientContext.permissions.allowed_mcp_servers;
-    if (allowedServers && allowedServers.length > 0 && !allowedServers.includes(serverId)) {
+    if (
+      allowedServers &&
+      allowedServers.length > 0 &&
+      !allowedServers.includes(serverId)
+    ) {
       throw new Error(
-        `Server "${serverId}" is not allowed for your account. Please adjust the Allowed MCP Servers permissions on the ToolPlex Dashboard if this is a mistake.`
+        `Server "${serverId}" is not allowed for your account. Please adjust the Allowed MCP Servers permissions on the ToolPlex Dashboard if this is a mistake.`,
       );
     }
   }
@@ -51,7 +57,7 @@ export class ServerPolicy {
       !this.clientContext.permissions.use_desktop_commander &&
       serverId === this.clientContext.flags.desktop_commander_server_id
     ) {
-      throw new Error('Desktop Commander is disabled for your account');
+      throw new Error("Desktop Commander is disabled for your account");
     }
   }
 
@@ -72,7 +78,12 @@ export class ServerPolicy {
    * @param getServerId Function that extracts the server ID from an object
    * @returns Filtered list with blocked servers removed
    */
-  public filterBlockedMcpServers<T>(servers: T[], getServerId: (item: T) => string): T[] {
-    return servers.filter((server) => !this.blockedMcpServersSet.has(getServerId(server)));
+  public filterBlockedMcpServers<T>(
+    servers: T[],
+    getServerId: (item: T) => string,
+  ): T[] {
+    return servers.filter(
+      (server) => !this.blockedMcpServersSet.has(getServerId(server)),
+    );
   }
 }

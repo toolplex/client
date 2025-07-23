@@ -78,9 +78,9 @@ export interface LogPlaybookUsageResponse {
 }
 
 export interface SubmitFeedbackRequest {
-  target_type: 'server' | 'playbook';
+  target_type: "server" | "playbook";
   target_id: string;
-  vote: 'up' | 'down';
+  vote: "up" | "down";
   message?: string;
   llm_context: LlmContext;
   machine_context: {
@@ -116,7 +116,7 @@ export interface LogTelemetryRequest {
   event_type: string;
   session_id?: string;
   agent_id?: string;
-  agent_type?: 'user' | 'system' | 'external';
+  agent_type?: "user" | "system" | "external";
   success?: boolean;
   pii_sanitized_error_message?: string;
   log_context?: {

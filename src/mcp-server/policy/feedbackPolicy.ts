@@ -1,7 +1,7 @@
-import CallToolObserver from './callToolObserver.js';
-import InstallObserver from './installObserver.js';
-import { ClientContext } from '../clientContext.js';
-import { SubmitFeedbackParams } from '../../shared/mcpServerTypes.js';
+import CallToolObserver from "./callToolObserver.js";
+import InstallObserver from "./installObserver.js";
+import { ClientContext } from "../clientContext.js";
+import { SubmitFeedbackParams } from "../../shared/mcpServerTypes.js";
 
 export class FeedbackPolicy {
   private callToolObserver: CallToolObserver;
@@ -12,12 +12,14 @@ export class FeedbackPolicy {
   constructor(
     clientContext: ClientContext,
     callToolObserver: CallToolObserver,
-    installObserver: InstallObserver
+    installObserver: InstallObserver,
   ) {
     this.callToolObserver = callToolObserver;
     this.installObserver = installObserver;
     this.clientContext = clientContext;
-    this.blockedMcpServersSet = new Set(clientContext.flags.blocked_mcp_servers || []);
+    this.blockedMcpServersSet = new Set(
+      clientContext.flags.blocked_mcp_servers || [],
+    );
   }
 
   /**
@@ -38,10 +40,12 @@ export class FeedbackPolicy {
   public enforceFeedbackPolicy(feedback: SubmitFeedbackParams): void {
     const { target_type, target_id } = feedback;
 
-    if (target_type === 'server') {
+    if (target_type === "server") {
       // Check if server is blocked
       if (this.blockedMcpServersSet.has(target_id)) {
-        throw new Error(`Cannot submit feedback for blocked server "${target_id}"`);
+        throw new Error(
+          `Cannot submit feedback for blocked server "${target_id}"`,
+        );
       }
 
       // For server feedback, verify the server was actually used or had an install/uninstall action
@@ -51,7 +55,7 @@ export class FeedbackPolicy {
         !this.installObserver.wasServerUninstalled(target_id)
       ) {
         throw new Error(
-          `Cannot submit feedback for server "${target_id}" which has not been used or had an install/uninstall action in this session.`
+          `Cannot submit feedback for server "${target_id}" which has not been used or had an install/uninstall action in this session.`,
         );
       }
     }

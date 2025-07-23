@@ -16,12 +16,18 @@ class CallToolObserver {
 
   // Check if a server was called at all
   public wasServerCalled(serverId: string): boolean {
-    return this.serverToolCalls.has(serverId) && this.serverToolCalls.get(serverId)!.size > 0;
+    return (
+      this.serverToolCalls.has(serverId) &&
+      this.serverToolCalls.get(serverId)!.size > 0
+    );
   }
 
   // Check if a specific tool was called on a server
   public wasToolCalled(serverId: string, toolName: string): boolean {
-    return this.serverToolCalls.has(serverId) && this.serverToolCalls.get(serverId)!.has(toolName);
+    return (
+      this.serverToolCalls.has(serverId) &&
+      this.serverToolCalls.get(serverId)!.has(toolName)
+    );
   }
 
   // Optionally, clear all records (for testing or reset)

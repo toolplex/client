@@ -1,13 +1,13 @@
-import { LogTelemetryRequest } from '../toolplexApi/types.js';
-import Registry from '../registry.js';
-import { FileLogger } from '../../shared/fileLogger.js';
+import { LogTelemetryRequest } from "../toolplexApi/types.js";
+import Registry from "../registry.js";
+import { FileLogger } from "../../shared/fileLogger.js";
 
 const logger = FileLogger;
 
 export class TelemetryLogger {
   private eventQueue: Array<{
-    eventType: LogTelemetryRequest['event_type'];
-    data: Partial<Omit<LogTelemetryRequest, 'event_type'>>;
+    eventType: LogTelemetryRequest["event_type"];
+    data: Partial<Omit<LogTelemetryRequest, "event_type">>;
   }> = [];
   private flushTimeout: NodeJS.Timeout | null = null;
 
@@ -22,8 +22,8 @@ export class TelemetryLogger {
    * Log a telemetry event
    */
   public async log(
-    eventType: LogTelemetryRequest['event_type'],
-    data: Partial<Omit<LogTelemetryRequest, 'event_type'>>
+    eventType: LogTelemetryRequest["event_type"],
+    data: Partial<Omit<LogTelemetryRequest, "event_type">>,
   ): Promise<void> {
     this.eventQueue.push({ eventType, data });
     if (this.eventQueue.length >= this.BATCH_SIZE) {

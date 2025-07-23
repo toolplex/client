@@ -1,15 +1,17 @@
-import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { FileLogger } from '../../shared/fileLogger.js';
-import { LogPlaybookUsageParams } from '../../shared/mcpServerTypes.js';
-import Registry from '../registry.js';
+import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { FileLogger } from "../../shared/fileLogger.js";
+import { LogPlaybookUsageParams } from "../../shared/mcpServerTypes.js";
+import Registry from "../registry.js";
 
 const logger = FileLogger;
 
 export async function handleLogPlaybookUsage(
-  params: LogPlaybookUsageParams
+  params: LogPlaybookUsageParams,
 ): Promise<CallToolResult> {
   const startTime = Date.now();
-  await logger.debug(`Handling log playbook usage request with params: ${JSON.stringify(params)}`);
+  await logger.debug(
+    `Handling log playbook usage request with params: ${JSON.stringify(params)}`,
+  );
 
   const { playbook_id, success, error_message } = params;
 
@@ -23,8 +25,8 @@ export async function handleLogPlaybookUsage(
 
   try {
     // Check if the client is in restricted mode
-    if (clientContext.clientMode === 'restricted') {
-      throw new Error('Playbook functionality is disabled in restricted mode.');
+    if (clientContext.clientMode === "restricted") {
+      throw new Error("Playbook functionality is disabled in restricted mode.");
     }
 
     // Enforce playbook usage logging policy
@@ -32,9 +34,9 @@ export async function handleLogPlaybookUsage(
 
     await apiService.logPlaybookUsage(playbook_id, success, error_message);
 
-    await logger.info('Playbook usage logged successfully');
+    await logger.info("Playbook usage logged successfully");
 
-    await telemetryLogger.log('client_log_playbook_usage', {
+    await telemetryLogger.log("client_log_playbook_usage", {
       success: true,
       log_context: {
         playbook_id,
@@ -44,11 +46,11 @@ export async function handleLogPlaybookUsage(
     });
 
     return {
-      role: 'system',
+      role: "system",
       content: [
         {
-          type: 'text',
-          text: promptsCache.getPrompt('log_playbook_usage_success'),
+          type: "text",
+          text: promptsCache.getPrompt("log_playbook_usage_success"),
         },
       ],
     };
@@ -56,7 +58,7 @@ export async function handleLogPlaybookUsage(
     const errorMessage = error instanceof Error ? error.message : String(error);
     await logger.error(`Failed to log playbook usage: ${errorMessage}`);
 
-    await telemetryLogger.log('client_log_playbook_usage', {
+    await telemetryLogger.log("client_log_playbook_usage", {
       success: false,
       log_context: {
         playbook_id,
@@ -67,13 +69,13 @@ export async function handleLogPlaybookUsage(
     });
 
     return {
-      role: 'system',
+      role: "system",
       content: [
         {
-          type: 'text',
+          type: "text",
           text: promptsCache
-            .getPrompt('log_playbook_usage_failure')
-            .replace('{ERROR}', errorMessage),
+            .getPrompt("log_playbook_usage_failure")
+            .replace("{ERROR}", errorMessage),
         },
       ],
     };

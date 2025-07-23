@@ -1,15 +1,17 @@
-import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { FileLogger } from '../../shared/fileLogger.js';
-import { SearchParams } from '../../shared/mcpServerTypes.js';
-import Registry from '../registry.js';
-import { ServersCache } from '../serversCache.js';
-import { annotateInstalledServers } from '../utils/resultAnnotators.js';
+import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { FileLogger } from "../../shared/fileLogger.js";
+import { SearchParams } from "../../shared/mcpServerTypes.js";
+import Registry from "../registry.js";
+import { ServersCache } from "../serversCache.js";
+import { annotateInstalledServers } from "../utils/resultAnnotators.js";
 
 const logger = FileLogger;
 
-export async function handleSearchTool(params: SearchParams): Promise<CallToolResult> {
+export async function handleSearchTool(
+  params: SearchParams,
+): Promise<CallToolResult> {
   const startTime = Date.now();
-  await logger.info('Handling search request');
+  await logger.info("Handling search request");
   await logger.debug(`Search params: ${JSON.stringify(params)}`);
 
   const apiService = Registry.getToolplexApiService();
@@ -19,30 +21,39 @@ export async function handleSearchTool(params: SearchParams): Promise<CallToolRe
   const clientContext = Registry.getClientContext();
   const query = params.query;
   const expandedKeywords = params.expanded_keywords || [];
-  const filter = params.filter || 'all';
+  const filter = params.filter || "all";
   const size = params.size || 10;
 
   try {
     // Check if the client is in restricted mode
-    if (clientContext.clientMode === 'restricted') {
-      throw new Error('Search functionality is disabled in restricted mode.');
+    if (clientContext.clientMode === "restricted") {
+      throw new Error("Search functionality is disabled in restricted mode.");
     }
 
-    const results = await apiService.search(query, expandedKeywords, filter, size);
+    const results = await apiService.search(
+      query,
+      expandedKeywords,
+      filter,
+      size,
+    );
 
     // Log telemetry event
-    await telemetryLogger.log('client_search', {
+    await telemetryLogger.log("client_search", {
       success: true,
       log_context: {
         filter,
         size,
         num_expanded_keywords: expandedKeywords.length,
-        num_results: (results.mcp_servers?.length ?? -1) + (results.playbooks?.length ?? -1),
+        num_results:
+          (results.mcp_servers?.length ?? -1) +
+          (results.playbooks?.length ?? -1),
       },
       latency_ms: Date.now() - startTime,
     });
 
-    const mcpServers = Array.isArray(results.mcp_servers) ? results.mcp_servers : [];
+    const mcpServers = Array.isArray(results.mcp_servers)
+      ? results.mcp_servers
+      : [];
     const playbooks = Array.isArray(results.playbooks) ? results.playbooks : [];
     const totalResults = mcpServers.length + playbooks.length;
 
@@ -59,43 +70,43 @@ export async function handleSearchTool(params: SearchParams): Promise<CallToolRe
     }
 
     if (totalResults === 0) {
-      await logger.info('No search results found');
+      await logger.info("No search results found");
       return {
-        role: 'system',
+        role: "system",
         content: [
           {
-            type: 'text',
-            text: promptsCache.getPrompt('search_no_results'),
+            type: "text",
+            text: promptsCache.getPrompt("search_no_results"),
           },
         ],
       };
     }
 
     await logger.debug(`Found ${totalResults} results`);
-    let response = promptsCache.getPrompt('search_results_header');
+    let response = promptsCache.getPrompt("search_results_header");
 
     if ((annotatedServers.length ?? 0) > 0) {
-      response += '\n=== Servers ===\n';
+      response += "\n=== Servers ===\n";
       response += JSON.stringify(annotatedServers, null, 2);
-      response += '\n';
+      response += "\n";
     } else {
-      response += '\n(No servers found)\n';
+      response += "\n(No servers found)\n";
     }
 
     if (playbooks.length > 0) {
-      response += '\n=== Playbooks ===\n';
+      response += "\n=== Playbooks ===\n";
       response += JSON.stringify(playbooks, null, 2);
-      response += '\n';
+      response += "\n";
     } else {
-      response += '\n(No playbooks found)\n';
+      response += "\n(No playbooks found)\n";
     }
 
-    await logger.info('Search completed successfully');
+    await logger.info("Search completed successfully");
     return {
-      role: 'system',
+      role: "system",
       content: [
         {
-          type: 'text',
+          type: "text",
           text: response,
         },
       ],
@@ -104,7 +115,7 @@ export async function handleSearchTool(params: SearchParams): Promise<CallToolRe
     const errorMessage = error instanceof Error ? error.message : String(error);
     await logger.error(`Search failed: ${errorMessage}`);
 
-    await telemetryLogger.log('client_search', {
+    await telemetryLogger.log("client_search", {
       success: false,
       log_context: {
         filter,
@@ -116,11 +127,13 @@ export async function handleSearchTool(params: SearchParams): Promise<CallToolRe
     });
 
     return {
-      role: 'system',
+      role: "system",
       content: [
         {
-          type: 'text',
-          text: promptsCache.getPrompt('unexpected_error').replace('{ERROR}', errorMessage),
+          type: "text",
+          text: promptsCache
+            .getPrompt("unexpected_error")
+            .replace("{ERROR}", errorMessage),
         },
       ],
     };

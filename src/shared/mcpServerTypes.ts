@@ -1,8 +1,8 @@
 // src/types/types.ts
-import { z } from 'zod';
+import { z } from "zod";
 
-export type ClientMode = 'standard' | 'restricted';
-export type LogLevel = 'error' | 'warn' | 'info' | 'debug';
+export type ClientMode = "standard" | "restricted";
+export type LogLevel = "error" | "warn" | "info" | "debug";
 
 export interface ToolplexServerConfig {
   dev: boolean;
@@ -14,10 +14,10 @@ export interface ToolplexServerConfig {
 // --------------------
 // Enums
 // --------------------
-export const TransportTypeSchema = z.enum(['stdio', 'sse']);
+export const TransportTypeSchema = z.enum(["stdio", "sse"]);
 export type TransportType = z.infer<typeof TransportTypeSchema>;
 
-export const RuntimeSchema = z.enum(['node', 'python', 'go', 'docker']);
+export const RuntimeSchema = z.enum(["node", "python", "go", "docker"]);
 export type Runtime = z.infer<typeof RuntimeSchema>;
 
 // --------------------
@@ -57,7 +57,9 @@ export const InitializeToolplexParamsSchema = z.object({
   llm_context: LLMContextSchema,
 });
 
-export type InitializeToolplexParams = z.infer<typeof InitializeToolplexParamsSchema>;
+export type InitializeToolplexParams = z.infer<
+  typeof InitializeToolplexParamsSchema
+>;
 
 // --------------------
 // SearchParams
@@ -65,7 +67,7 @@ export type InitializeToolplexParams = z.infer<typeof InitializeToolplexParamsSc
 export const SearchParamsSchema = z.object({
   query: z.string(),
   expanded_keywords: z.array(z.string()).optional(),
-  filter: z.enum(['all', 'servers_only', 'playbooks_only']).optional(),
+  filter: z.enum(["all", "servers_only", "playbooks_only"]).optional(),
   size: z.number().int().min(1).max(25).optional(),
 });
 
@@ -75,7 +77,7 @@ export type SearchParams = z.infer<typeof SearchParamsSchema>;
 // LookupEntityParams
 // --------------------
 export const LookupEntityParamsSchema = z.object({
-  entity_type: z.enum(['server', 'playbook', 'feedback']),
+  entity_type: z.enum(["server", "playbook", "feedback"]),
   entity_id: z.string(),
 });
 
@@ -140,9 +142,16 @@ export const PlaybookActionSchema = z.object({
   args: z
     .record(
       z.object({
-        type: z.enum(['string', 'number', 'boolean', 'array', 'object', 'placeholder']),
+        type: z.enum([
+          "string",
+          "number",
+          "boolean",
+          "array",
+          "object",
+          "placeholder",
+        ]),
         example: z.any(),
-      })
+      }),
     )
     .optional(),
 });
@@ -159,11 +168,13 @@ export const SavePlaybookParamsSchema = z.object({
     .array(PlaybookActionSchema)
     .refine(
       (actions) =>
-        actions.some((action) => typeof action.call === 'string' && action.call.length > 0),
+        actions.some(
+          (action) => typeof action.call === "string" && action.call.length > 0,
+        ),
       {
         message: 'At least one action must include a "call" property',
-        path: ['actions'],
-      }
+        path: ["actions"],
+      },
     ),
   domain: z.string().optional(),
   keywords: z.array(z.string()).optional(),
@@ -183,15 +194,17 @@ export const LogPlaybookUsageParamsSchema = z.object({
   error_message: z.string().optional(),
 });
 
-export type LogPlaybookUsageParams = z.infer<typeof LogPlaybookUsageParamsSchema>;
+export type LogPlaybookUsageParams = z.infer<
+  typeof LogPlaybookUsageParamsSchema
+>;
 
 // --------------------
 // SubmitFeedbackParams
 // --------------------
 export const SubmitFeedbackParamsSchema = z.object({
-  target_type: z.enum(['server', 'playbook']),
+  target_type: z.enum(["server", "playbook"]),
   target_id: z.string(),
-  vote: z.enum(['up', 'down']),
+  vote: z.enum(["up", "down"]),
   message: z.string().optional(),
   security_assessment: z
     .object({
@@ -201,7 +214,7 @@ export const SubmitFeedbackParamsSchema = z.object({
           z.object({
             custom_flag: z.string(),
           }),
-        ])
+        ]),
       ),
       risk_assessment: z.string(),
       context_note: z.string().optional(),

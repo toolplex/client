@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // --------------------
 // initialize
@@ -9,14 +9,14 @@ export const InitializeResultSchema = z.object({
       server_id: z.string(),
       server_name: z.string(),
       description: z.string(),
-    })
+    }),
   ),
   failures: z.record(
     z.object({
       server_id: z.string(),
       server_name: z.string(),
       error: z.string(),
-    })
+    }),
   ),
 });
 export type InitializeResult = z.infer<typeof InitializeResultSchema>;
@@ -49,7 +49,7 @@ export const ListServersResultSchema = z.object({
       server_name: z.string(),
       description: z.string(),
       tool_count: z.number(),
-    })
+    }),
   ),
 });
 export type ListServersResult = z.infer<typeof ListServersResultSchema>;
@@ -65,7 +65,7 @@ export const ListToolsResultSchema = z.object({
       name: z.string(),
       description: z.string().optional(),
       inputSchema: z.any(),
-    })
+    }),
   ),
 });
 export type ListToolsResult = z.infer<typeof ListToolsResultSchema>;
@@ -80,8 +80,8 @@ export const ListAllToolsResultSchema = z.object({
         name: z.string(),
         description: z.string().optional(),
         inputSchema: z.any(),
-      })
-    )
+      }),
+    ),
   ),
 });
 export type ListAllToolsResult = z.infer<typeof ListAllToolsResultSchema>;

@@ -1,13 +1,15 @@
-import { StdioServerManagerClient } from '../../shared/stdioServerManagerClient.js';
+import { StdioServerManagerClient } from "../../shared/stdioServerManagerClient.js";
 
 export async function findServerManagerClient(
   serverId: string,
-  serverManagerClients: Record<string, StdioServerManagerClient>
+  serverManagerClients: Record<string, StdioServerManagerClient>,
 ): Promise<StdioServerManagerClient> {
   for (const client of Object.values(serverManagerClients)) {
-    const response = await client.sendRequest('list_servers', {});
-    if ('error' in response) {
-      throw new Error(`Failed to list servers; error message: ${response.error.message}`);
+    const response = await client.sendRequest("list_servers", {});
+    if ("error" in response) {
+      throw new Error(
+        `Failed to list servers; error message: ${response.error.message}`,
+      );
     }
     // Handle both array and object responses
     const serverList = Array.isArray(response) ? response : response.servers;
@@ -16,7 +18,7 @@ export async function findServerManagerClient(
       const hasServer = serverList.some(
         (s) =>
           // Handle both server_id and serverId properties
-          s.server_id === serverId || s.serverId === serverId
+          s.server_id === serverId || s.serverId === serverId,
       );
       if (hasServer) {
         return client;

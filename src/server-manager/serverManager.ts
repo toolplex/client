@@ -1,18 +1,18 @@
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import {
   StdioClientTransport,
   StdioServerParameters,
-} from '@modelcontextprotocol/sdk/client/stdio.js';
-import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import which from 'which';
-import { ServerConfig } from '../shared/mcpServerTypes.js';
-import { FileLogger } from '../shared/fileLogger.js';
-import envPaths from 'env-paths';
-import { InitializeResult } from '../shared/serverManagerTypes.js';
-import { getEnhancedPath } from '../shared/enhancedPath.js';
+} from "@modelcontextprotocol/sdk/client/stdio.js";
+import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
+import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import * as fs from "fs/promises";
+import * as path from "path";
+import which from "which";
+import { ServerConfig } from "../shared/mcpServerTypes.js";
+import { FileLogger } from "../shared/fileLogger.js";
+import envPaths from "env-paths";
+import { InitializeResult } from "../shared/serverManagerTypes.js";
+import { getEnhancedPath } from "../shared/enhancedPath.js";
 
 const logger = FileLogger;
 
@@ -34,26 +34,26 @@ export class ServerManager {
     this.tools = new Map();
     this.serverNames = new Map();
 
-    const paths = envPaths('ToolPlex', { suffix: '' });
-    this.configPath = path.join(paths.data, 'server_config.json');
+    const paths = envPaths("ToolPlex", { suffix: "" });
+    this.configPath = path.join(paths.data, "server_config.json");
   }
 
   private async loadConfig(): Promise<Record<string, ServerConfig>> {
     try {
-      const data = await fs.readFile(this.configPath, 'utf-8');
+      const data = await fs.readFile(this.configPath, "utf-8");
       await logger.debug(`Loaded config from ${this.configPath}`);
 
       const allConfig = JSON.parse(data);
 
       // Validate the config structure
-      if (typeof allConfig !== 'object' || allConfig === null) {
-        await logger.warn('Invalid config format, using empty config');
+      if (typeof allConfig !== "object" || allConfig === null) {
+        await logger.warn("Invalid config format, using empty config");
         return {};
       }
 
       const config: Record<string, ServerConfig> = {};
       for (const [serverId, serverConfig] of Object.entries(allConfig)) {
-        if (typeof serverConfig === 'object' && serverConfig !== null) {
+        if (typeof serverConfig === "object" && serverConfig !== null) {
           config[serverId] = serverConfig as ServerConfig;
         } else {
           await logger.warn(`Invalid server config for ${serverId}, skipping`);
@@ -61,14 +61,16 @@ export class ServerManager {
       }
       return config;
     } catch (error: unknown) {
-      let errorMessage = 'Unknown error occurred';
+      let errorMessage = "Unknown error occurred";
       if (error instanceof Error) errorMessage = error.message;
-      await logger.debug(`No existing config found at ${this.configPath}: ${errorMessage}`);
+      await logger.debug(
+        `No existing config found at ${this.configPath}: ${errorMessage}`,
+      );
 
       // If the file exists but is malformed, back it up and start fresh
       try {
         await fs.access(this.configPath);
-        const backupPath = this.configPath + '.backup.' + Date.now();
+        const backupPath = this.configPath + ".backup." + Date.now();
         await fs.copyFile(this.configPath, backupPath);
         await logger.warn(`Malformed config backed up to ${backupPath}`);
       } catch {
@@ -79,18 +81,22 @@ export class ServerManager {
     }
   }
 
-  private async saveConfig(config: Record<string, ServerConfig>): Promise<void> {
+  private async saveConfig(
+    config: Record<string, ServerConfig>,
+  ): Promise<void> {
     // Use a lock to prevent concurrent writes
     this.configLock = this.configLock.then(async () => {
       let existingConfig: Record<string, ServerConfig> = {};
 
       try {
-        const data = await fs.readFile(this.configPath, 'utf-8');
+        const data = await fs.readFile(this.configPath, "utf-8");
         existingConfig = JSON.parse(data);
 
         // Validate the existing config structure
-        if (typeof existingConfig !== 'object' || existingConfig === null) {
-          await logger.warn('Invalid existing config format, using empty config');
+        if (typeof existingConfig !== "object" || existingConfig === null) {
+          await logger.warn(
+            "Invalid existing config format, using empty config",
+          );
           existingConfig = {};
         }
       } catch (error) {
@@ -115,7 +121,7 @@ export class ServerManager {
       await fs.mkdir(path.dirname(this.configPath), { recursive: true });
 
       // Write to a temporary file first, then rename (atomic operation)
-      const tempPath = this.configPath + '.tmp';
+      const tempPath = this.configPath + ".tmp";
       try {
         await fs.writeFile(tempPath, JSON.stringify(mergedConfig, null, 2));
         await fs.rename(tempPath, this.configPath);
@@ -136,19 +142,21 @@ export class ServerManager {
 
   async initialize(): Promise<InitializeResult> {
     await this.cleanup();
-    const succeeded: InitializeResult['succeeded'] = [];
-    const failures: InitializeResult['failures'] = {};
+    const succeeded: InitializeResult["succeeded"] = [];
+    const failures: InitializeResult["failures"] = {};
 
     try {
-      await logger.info('Initializing ServerManager');
+      await logger.info("Initializing ServerManager");
       this.config = await this.loadConfig();
-      await logger.debug(`Loaded ${Object.keys(this.config).length} server configs`);
+      await logger.debug(
+        `Loaded ${Object.keys(this.config).length} server configs`,
+      );
 
       for (const [serverId, serverConfig] of Object.entries(this.config)) {
         succeeded.push({
           server_id: serverId,
           server_name: serverConfig.server_name ?? serverId,
-          description: serverConfig.description ?? '',
+          description: serverConfig.description ?? "",
         });
       }
     } catch (err) {
@@ -167,7 +175,7 @@ export class ServerManager {
   async connectWithHandshakeTimeout(
     client: Client,
     transport: SSEClientTransport | StdioClientTransport,
-    ms = 30000
+    ms = 30000,
   ): Promise<{ tools?: Tool[] }> {
     let connectTimeout: NodeJS.Timeout;
     let listToolsTimeout: NodeJS.Timeout;
@@ -179,7 +187,7 @@ export class ServerManager {
         new Promise<never>((_, reject) => {
           connectTimeout = setTimeout(
             () => reject(new Error(`connect() timed out in ${ms} ms`)),
-            ms
+            ms,
           );
         }),
       ]);
@@ -193,7 +201,7 @@ export class ServerManager {
         new Promise<never>((_, reject) => {
           listToolsTimeout = setTimeout(
             () => reject(new Error(`listTools() timed out in ${ms} ms`)),
-            ms
+            ms,
           );
         }),
       ]);
@@ -212,7 +220,7 @@ export class ServerManager {
     serverId: string,
     serverName: string,
     description: string,
-    config: ServerConfig
+    config: ServerConfig,
   ): Promise<void> {
     await logger.info(`Installing server ${serverId} (${serverName})`);
     await logger.debug(`Server config: ${JSON.stringify(config)}`);
@@ -220,13 +228,20 @@ export class ServerManager {
     // Check if there's already an ongoing installation for this server
     const existingInstall = this.installationPromises.get(serverId);
     if (existingInstall) {
-      await logger.debug(`Installation already in progress for ${serverId}, waiting...`);
+      await logger.debug(
+        `Installation already in progress for ${serverId}, waiting...`,
+      );
       await existingInstall;
       return;
     }
 
     // Create the installation promise
-    const installPromise = this.performInstall(serverId, serverName, description, config);
+    const installPromise = this.performInstall(
+      serverId,
+      serverName,
+      description,
+      config,
+    );
     this.installationPromises.set(serverId, installPromise);
 
     try {
@@ -241,7 +256,7 @@ export class ServerManager {
     serverId: string,
     serverName: string,
     description: string,
-    config: ServerConfig
+    config: ServerConfig,
   ): Promise<void> {
     if (this.sessions.has(serverId)) {
       await logger.debug(`Server ${serverId} already exists, removing first`);
@@ -249,11 +264,12 @@ export class ServerManager {
     }
 
     let transport;
-    if (config.transport === 'sse') {
-      if (!config.url) throw new Error('URL is required for SSE transport');
+    if (config.transport === "sse") {
+      if (!config.url) throw new Error("URL is required for SSE transport");
       transport = new SSEClientTransport(new URL(config.url));
-    } else if (config.transport === 'stdio') {
-      if (!config.command) throw new Error('Command is required for stdio transport');
+    } else if (config.transport === "stdio") {
+      if (!config.command)
+        throw new Error("Command is required for stdio transport");
 
       const enhancedPath = getEnhancedPath();
       let resolvedCommand = which.sync(config.command, {
@@ -274,7 +290,7 @@ export class ServerManager {
           PATH: enhancedPath,
           ...(config.env || {}),
         },
-        stderr: 'pipe',
+        stderr: "pipe",
       };
       transport = new StdioClientTransport(serverParams);
     } else {
@@ -282,12 +298,16 @@ export class ServerManager {
     }
 
     const client = new Client(
-      { name: serverId, version: '1.0.0' },
-      { capabilities: { prompts: {}, resources: {}, tools: {} } }
+      { name: serverId, version: "1.0.0" },
+      { capabilities: { prompts: {}, resources: {}, tools: {} } },
     );
 
     try {
-      const toolsResponse = await this.connectWithHandshakeTimeout(client, transport, 30000);
+      const toolsResponse = await this.connectWithHandshakeTimeout(
+        client,
+        transport,
+        30000,
+      );
       const tools = toolsResponse.tools || [];
 
       this.sessions.set(serverId, client);
@@ -308,7 +328,9 @@ export class ServerManager {
 
       this.config[serverId] = updatedEntry;
 
-      await logger.info(`Successfully installed server ${serverId} with ${tools.length} tools`);
+      await logger.info(
+        `Successfully installed server ${serverId} with ${tools.length} tools`,
+      );
     } catch (err) {
       // Clean up on failure
       this.sessions.delete(serverId);
@@ -320,7 +342,9 @@ export class ServerManager {
         try {
           await client.transport.close();
         } catch (closeErr) {
-          await logger.warn(`Failed to close transport during cleanup: ${closeErr}`);
+          await logger.warn(
+            `Failed to close transport during cleanup: ${closeErr}`,
+          );
         }
       }
 
@@ -333,7 +357,7 @@ export class ServerManager {
     toolName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     arguments_: Record<string, any>,
-    timeout = 60000
+    timeout = 60000,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
     // Check for ongoing installation before attempting to install
@@ -347,7 +371,7 @@ export class ServerManager {
       const config = this.config[serverId];
       if (!config) throw new Error(`No config found for server ${serverId}`);
       const name = config.server_name || serverId;
-      const description = config.description || '';
+      const description = config.description || "";
       await this.install(serverId, name, description, config);
     }
 
@@ -361,7 +385,7 @@ export class ServerManager {
       watchdogTimer = setTimeout(async () => {
         didTimeout = true;
         await logger.error(
-          `[WATCHDOG] Tool call to ${toolName} on server ${serverId} timed out after ${timeout}ms. Removing server.`
+          `[WATCHDOG] Tool call to ${toolName} on server ${serverId} timed out after ${timeout}ms. Removing server.`,
         );
         await this.removeServer(serverId);
         reject(new Error(`Tool call timed out after ${timeout}ms`));
@@ -387,7 +411,9 @@ export class ServerManager {
       }
 
       if (!didTimeout) {
-        await logger.error(`callTool failed for ${toolName} on ${serverId}: ${String(err)}`);
+        await logger.error(
+          `callTool failed for ${toolName} on ${serverId}: ${String(err)}`,
+        );
         await this.removeServer(serverId);
       }
 
@@ -399,12 +425,16 @@ export class ServerManager {
     // Wait for any ongoing installation to complete before uninstalling
     const existingInstall = this.installationPromises.get(serverId);
     if (existingInstall) {
-      await logger.debug(`Waiting for ongoing installation of ${serverId} before uninstalling...`);
+      await logger.debug(
+        `Waiting for ongoing installation of ${serverId} before uninstalling...`,
+      );
       try {
         await existingInstall;
       } catch (err) {
         // Installation failed, continue with uninstall
-        await logger.debug(`Installation failed, continuing with uninstall: ${err}`);
+        await logger.debug(
+          `Installation failed, continuing with uninstall: ${err}`,
+        );
       }
     }
 
@@ -414,18 +444,22 @@ export class ServerManager {
     // Remove the server from the config file
     let config: Record<string, ServerConfig> = {};
     try {
-      const data = await fs.readFile(this.configPath, 'utf-8');
+      const data = await fs.readFile(this.configPath, "utf-8");
       config = JSON.parse(data);
     } catch (error) {
       // If config file doesn't exist, nothing to do
-      await logger.debug(`Could not read existing config for uninstall: ${error}`);
+      await logger.debug(
+        `Could not read existing config for uninstall: ${error}`,
+      );
       return;
     }
 
     if (Object.prototype.hasOwnProperty.call(config, serverId)) {
       delete config[serverId];
       await fs.writeFile(this.configPath, JSON.stringify(config, null, 2));
-      await logger.debug(`Removed server ${serverId} from config at ${this.configPath}`);
+      await logger.debug(
+        `Removed server ${serverId} from config at ${this.configPath}`,
+      );
     }
 
     // Remove from in-memory config as well
@@ -448,14 +482,19 @@ export class ServerManager {
   }
 
   async listServers(): Promise<
-    Array<{ server_id: string; server_name: string; tool_count: number; description: string }>
+    Array<{
+      server_id: string;
+      server_name: string;
+      tool_count: number;
+      description: string;
+    }>
   > {
     const config = await this.loadConfig();
     return Object.entries(config).map(([id, cfg]) => ({
       server_id: id,
       server_name: cfg.server_name || id,
       tool_count: this.tools.get(id)?.length || 0,
-      description: cfg.description || '',
+      description: cfg.description || "",
     }));
   }
 
@@ -473,8 +512,8 @@ export class ServerManager {
       await this.install(
         serverId,
         config.server_name || serverId,
-        config.description || '',
-        config
+        config.description || "",
+        config,
       );
     }
     return this.tools.get(serverId) || [];
@@ -495,7 +534,7 @@ export class ServerManager {
     const ongoingInstalls = Array.from(this.installationPromises.values());
     if (ongoingInstalls.length > 0) {
       await logger.debug(
-        `Waiting for ${ongoingInstalls.length} ongoing installations to complete...`
+        `Waiting for ${ongoingInstalls.length} ongoing installations to complete...`,
       );
       await Promise.allSettled(ongoingInstalls);
     }

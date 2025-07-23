@@ -1,16 +1,21 @@
-import { serve } from './toolplexServer.js';
-import dotenv from 'dotenv';
-import { ToolplexServerConfig, ClientMode, LogLevel } from '../shared/mcpServerTypes.js';
-import { FileLogger } from '../shared/fileLogger.js';
+import { serve } from "./toolplexServer.js";
+import dotenv from "dotenv";
+import {
+  ToolplexServerConfig,
+  ClientMode,
+  LogLevel,
+} from "../shared/mcpServerTypes.js";
+import { FileLogger } from "../shared/fileLogger.js";
 
 dotenv.config();
 
-FileLogger.initialize('mcp-server');
+FileLogger.initialize("mcp-server");
 
-const isDev: boolean = process.env.DEV === 'true';
+const isDev: boolean = process.env.DEV === "true";
 const apiKey: string | undefined = process.env.TOOLPLEX_API_KEY;
-const clientMode: ClientMode = (process.env.TOOLPLEX_CLIENT_MODE as ClientMode) || 'standard';
-const logLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) || 'info';
+const clientMode: ClientMode =
+  (process.env.TOOLPLEX_CLIENT_MODE as ClientMode) || "standard";
+const logLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) || "info";
 
 if (!apiKey) {
   process.exit(1);

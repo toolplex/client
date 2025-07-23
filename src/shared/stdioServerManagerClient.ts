@@ -1,5 +1,5 @@
-import { spawn } from 'child_process';
-import { ChildProcess } from 'child_process';
+import { spawn } from "child_process";
+import { ChildProcess } from "child_process";
 
 export class StdioServerManagerClient {
   private serverProcess: ChildProcess | null = null;
@@ -12,7 +12,7 @@ export class StdioServerManagerClient {
 
   constructor(command: string, args: string[], env?: NodeJS.ProcessEnv) {
     this.messageHandlers = new Map();
-    this.messageBuffer = '';
+    this.messageBuffer = "";
     this.command = command;
     this.args = args;
     this.env = env ? { ...process.env, ...env } : process.env;
@@ -20,28 +20,32 @@ export class StdioServerManagerClient {
 
   async start() {
     this.serverProcess = spawn(this.command, this.args, {
-      stdio: ['pipe', 'pipe', 'pipe'],
+      stdio: ["pipe", "pipe", "pipe"],
       env: this.env,
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.serverProcess.on('error', (err: any) => {
+    this.serverProcess.on("error", (err: any) => {
       process.stderr.write(`Server process error: ${err}\n`);
     });
 
-    if (!this.serverProcess.stderr || !this.serverProcess.stdout || !this.serverProcess.stdin) {
-      throw new Error('Server process streams not available');
+    if (
+      !this.serverProcess.stderr ||
+      !this.serverProcess.stdout ||
+      !this.serverProcess.stdin
+    ) {
+      throw new Error("Server process streams not available");
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.serverProcess.stderr.on('data', (data: any) => {
+    this.serverProcess.stderr.on("data", (data: any) => {
       process.stderr.write(data);
     });
 
-    this.serverProcess.stdout.on('data', (data: Buffer) => {
+    this.serverProcess.stdout.on("data", (data: Buffer) => {
       this.messageBuffer += data.toString();
-      const lines = this.messageBuffer.split('\n');
-      this.messageBuffer = lines.pop() || '';
+      const lines = this.messageBuffer.split("\n");
+      this.messageBuffer = lines.pop() || "";
 
       for (const line of lines) {
         if (!line.trim()) continue;
@@ -59,11 +63,12 @@ export class StdioServerManagerClient {
       }
     });
 
-    this.serverProcess.on('exit', () => {
-      for (const [, h] of this.messageHandlers) h({ __error__: { message: 'Subprocess exited' } });
+    this.serverProcess.on("exit", () => {
+      for (const [, h] of this.messageHandlers)
+        h({ __error__: { message: "Subprocess exited" } });
       this.messageHandlers.clear();
       this.serverProcess = null;
-      this.messageBuffer = '';
+      this.messageBuffer = "";
     });
   }
 
@@ -72,11 +77,12 @@ export class StdioServerManagerClient {
     return new Promise((resolve, reject) => {
       const id = Date.now();
       if (!this.serverProcess?.stdin) {
-        reject(Error('Server process not started'));
+        reject(Error("Server process not started"));
       } else {
         this.messageHandlers.set(id, (frame) => {
           if (frame.error || frame.__error__) {
-            const msg = frame.error?.message ?? frame.__error__?.message ?? 'MCP error';
+            const msg =
+              frame.error?.message ?? frame.__error__?.message ?? "MCP error";
             reject(new Error(msg));
           } else {
             resolve(frame.result);
@@ -84,11 +90,11 @@ export class StdioServerManagerClient {
         });
         this.serverProcess.stdin.write(
           JSON.stringify({
-            jsonrpc: '2.0',
+            jsonrpc: "2.0",
             method,
             params,
             id,
-          }) + '\n'
+          }) + "\n",
         );
       }
 
@@ -106,7 +112,7 @@ export class StdioServerManagerClient {
       this.serverProcess.kill();
       this.serverProcess = null;
       this.messageHandlers.clear();
-      this.messageBuffer = '';
+      this.messageBuffer = "";
     }
   }
 }

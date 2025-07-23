@@ -1,17 +1,22 @@
-import CallToolObserver from './callToolObserver.js';
-import { ClientContext } from '../clientContext.js';
-import { SavePlaybookParams } from '../../shared/mcpServerTypes.js';
-import Registry from '../registry.js';
+import CallToolObserver from "./callToolObserver.js";
+import { ClientContext } from "../clientContext.js";
+import { SavePlaybookParams } from "../../shared/mcpServerTypes.js";
+import Registry from "../registry.js";
 
 export class PlaybookPolicy {
   private callToolObserver: CallToolObserver;
   private clientContext: ClientContext;
   private blockedMcpServersSet: Set<string>;
 
-  constructor(clientContext: ClientContext, callToolObserver: CallToolObserver) {
+  constructor(
+    clientContext: ClientContext,
+    callToolObserver: CallToolObserver,
+  ) {
     this.callToolObserver = callToolObserver;
     this.clientContext = clientContext;
-    this.blockedMcpServersSet = new Set(clientContext.flags.blocked_mcp_servers || []);
+    this.blockedMcpServersSet = new Set(
+      clientContext.flags.blocked_mcp_servers || [],
+    );
   }
 
   /**
@@ -30,7 +35,7 @@ export class PlaybookPolicy {
    */
   public enforceSavePlaybookPolicy(playbook: SavePlaybookParams): void {
     if (!Array.isArray(playbook.actions)) {
-      throw new Error('Playbook actions must be an array');
+      throw new Error("Playbook actions must be an array");
     }
 
     for (const [idx, action] of playbook.actions.entries()) {
@@ -43,42 +48,48 @@ export class PlaybookPolicy {
       // - "playbook_id:<playbook_id>"
       const call = action.call.trim();
 
-      if (call.startsWith('mcp_server_id:')) {
+      if (call.startsWith("mcp_server_id:")) {
         // Could be with or without tool_name
         // e.g. mcp_server_id:abc123::toolX or mcp_server_id:abc123
         const match = call.match(/^mcp_server_id:([^:]+)(?:::([^:]+))?$/);
         if (!match) {
-          throw new Error(`Invalid call format in action ${idx + 1}: "${call}"`);
+          throw new Error(
+            `Invalid call format in action ${idx + 1}: "${call}"`,
+          );
         }
         const serverId = match[1];
         const toolName = match[2];
 
         // Check if server is blocked
         if (this.blockedMcpServersSet.has(serverId)) {
-          throw new Error(`Playbook action ${idx + 1} references blocked server "${serverId}"`);
+          throw new Error(
+            `Playbook action ${idx + 1} references blocked server "${serverId}"`,
+          );
         }
 
         if (toolName) {
           // Must have called this tool on this server
           if (!this.callToolObserver.wasToolCalled(serverId, toolName)) {
             throw new Error(
-              `Playbook action ${idx + 1} references tool "${toolName}" on server "${serverId}" which has not been used in this session.`
+              `Playbook action ${idx + 1} references tool "${toolName}" on server "${serverId}" which has not been used in this session.`,
             );
           }
         } else {
           // Only server referenced, must have called any tool on this server
           if (!this.callToolObserver.wasServerCalled(serverId)) {
             throw new Error(
-              `Playbook action ${idx + 1} references server "${serverId}" which has not been used in this session.`
+              `Playbook action ${idx + 1} references server "${serverId}" which has not been used in this session.`,
             );
           }
         }
-      } else if (call.startsWith('playbook_id:')) {
+      } else if (call.startsWith("playbook_id:")) {
         // For playbook references, we could skip or add logic if needed
         // For now, we do not validate playbook_id usage
         continue;
       } else {
-        throw new Error(`Playbook action ${idx + 1} has an unrecognized call format: "${call}"`);
+        throw new Error(
+          `Playbook action ${idx + 1} has an unrecognized call format: "${call}"`,
+        );
       }
     }
   }
@@ -90,7 +101,7 @@ export class PlaybookPolicy {
   public enforceLogPlaybookUsagePolicy(): void {
     if (this.clientContext.permissions.enable_read_only_mode) {
       const promptsCache = Registry.getPromptsCache();
-      throw new Error(promptsCache.getPrompt('log_playbook_usage_disabled'));
+      throw new Error(promptsCache.getPrompt("log_playbook_usage_disabled"));
     }
   }
 }

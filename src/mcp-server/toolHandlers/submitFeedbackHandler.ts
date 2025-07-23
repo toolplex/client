@@ -1,13 +1,15 @@
-import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { FileLogger } from '../../shared/fileLogger.js';
-import { SubmitFeedbackParams } from '../../shared/mcpServerTypes.js';
-import Registry from '../registry.js';
+import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { FileLogger } from "../../shared/fileLogger.js";
+import { SubmitFeedbackParams } from "../../shared/mcpServerTypes.js";
+import Registry from "../registry.js";
 
 const logger = FileLogger;
 
-export async function handleSubmitFeedback(params: SubmitFeedbackParams): Promise<CallToolResult> {
+export async function handleSubmitFeedback(
+  params: SubmitFeedbackParams,
+): Promise<CallToolResult> {
   const startTime = Date.now();
-  await logger.info('Handling submit feedback request');
+  await logger.info("Handling submit feedback request");
   await logger.debug(`Feedback params: ${JSON.stringify(params)}`);
 
   const { target_type, target_id, vote, message, security_assessment } = params;
@@ -20,13 +22,13 @@ export async function handleSubmitFeedback(params: SubmitFeedbackParams): Promis
 
   try {
     // Check if the client is in restricted mode
-    if (clientContext.clientMode === 'restricted') {
-      throw new Error('Feedback functionality is disabled in restricted mode.');
+    if (clientContext.clientMode === "restricted") {
+      throw new Error("Feedback functionality is disabled in restricted mode.");
     }
 
     // Check if read-only mode is enabled
     if (clientContext.permissions.enable_read_only_mode) {
-      throw new Error('Saving playbooks is disabled in read-only mode');
+      throw new Error("Saving playbooks is disabled in read-only mode");
     }
 
     // Enforce feedback policy before submitting
@@ -37,12 +39,14 @@ export async function handleSubmitFeedback(params: SubmitFeedbackParams): Promis
       target_id,
       vote,
       message,
-      security_assessment
+      security_assessment,
     );
 
-    await logger.info(`Feedback submitted successfully for ${target_type} ${target_id}`);
+    await logger.info(
+      `Feedback submitted successfully for ${target_type} ${target_id}`,
+    );
 
-    await telemetryLogger.log('client_submit_feedback', {
+    await telemetryLogger.log("client_submit_feedback", {
       success: true,
       log_context: {
         target_type,
@@ -53,13 +57,13 @@ export async function handleSubmitFeedback(params: SubmitFeedbackParams): Promis
     });
 
     return {
-      role: 'system',
+      role: "system",
       content: [
         {
-          type: 'text',
+          type: "text",
           text: promptsCache
-            .getPrompt('submit_feedback_success')
-            .replace('{FEEDBACK_ID}', response.id),
+            .getPrompt("submit_feedback_success")
+            .replace("{FEEDBACK_ID}", response.id),
         },
       ],
     };
@@ -67,7 +71,7 @@ export async function handleSubmitFeedback(params: SubmitFeedbackParams): Promis
     const errorMessage = error instanceof Error ? error.message : String(error);
     await logger.error(`Failed to submit feedback: ${errorMessage}`);
 
-    await telemetryLogger.log('client_submit_feedback', {
+    await telemetryLogger.log("client_submit_feedback", {
       success: false,
       log_context: {
         target_type,
@@ -78,11 +82,13 @@ export async function handleSubmitFeedback(params: SubmitFeedbackParams): Promis
     });
 
     return {
-      role: 'system',
+      role: "system",
       content: [
         {
-          type: 'text',
-          text: promptsCache.getPrompt('unexpected_error').replace('{ERROR}', errorMessage),
+          type: "text",
+          text: promptsCache
+            .getPrompt("unexpected_error")
+            .replace("{ERROR}", errorMessage),
         },
       ],
     };

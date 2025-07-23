@@ -1,7 +1,7 @@
-import * as path from 'path';
-import { existsSync } from 'fs';
-import { homedir } from 'os';
-import { glob } from 'glob';
+import * as path from "path";
+import { existsSync } from "fs";
+import { homedir } from "os";
+import { glob } from "glob";
 
 /**
  * Returns an enhanced PATH string by prepending common binary directories
@@ -12,14 +12,14 @@ import { glob } from 'glob';
 export function getEnhancedPath(): string {
   const home = homedir();
 
-  const basePaths = (process.env.PATH || '').split(path.delimiter);
+  const basePaths = (process.env.PATH || "").split(path.delimiter);
   const extraPaths = getDefaultExtraPaths(home);
 
   const seen = new Set(basePaths);
   const allPaths: string[] = [...basePaths];
 
   for (const extraPath of extraPaths) {
-    if (extraPath.includes('*')) {
+    if (extraPath.includes("*")) {
       const matches = glob.sync(extraPath);
       for (const match of matches) {
         if (existsSync(match) && !seen.has(match)) {
@@ -42,17 +42,17 @@ export function getEnhancedPath(): string {
  * Returns platform-specific extra binary paths.
  */
 function getDefaultExtraPaths(home: string): string[] {
-  const isWindows = process.platform === 'win32';
+  const isWindows = process.platform === "win32";
 
   return isWindows
     ? [
-        path.join(home, 'AppData/Local/Programs/Python/Python3*/Scripts'),
-        path.join(home, 'AppData/Roaming/npm'),
+        path.join(home, "AppData/Local/Programs/Python/Python3*/Scripts"),
+        path.join(home, "AppData/Roaming/npm"),
       ]
     : [
-        path.join(home, '.local/bin'),
-        path.join(home, '.cargo/bin'),
-        '/usr/local/bin',
-        '/opt/homebrew/bin',
+        path.join(home, ".local/bin"),
+        path.join(home, ".cargo/bin"),
+        "/usr/local/bin",
+        "/opt/homebrew/bin",
       ];
 }

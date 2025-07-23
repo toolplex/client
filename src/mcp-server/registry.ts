@@ -1,11 +1,11 @@
-import { ClientContext } from './clientContext.js';
-import { ToolplexApiService } from './toolplexApi/service.js';
-import { StdioServerManagerClient } from '../shared/stdioServerManagerClient.js';
-import { TelemetryLogger } from './logging/telemetryLogger.js';
-import { PromptsCache } from './promptsCache.js';
-import { ToolDefinitionsCache } from './toolDefinitionsCache.js';
-import { ServersCache } from './serversCache.js';
-import { PolicyEnforcer } from './policy/policyEnforcer.js';
+import { ClientContext } from "./clientContext.js";
+import { ToolplexApiService } from "./toolplexApi/service.js";
+import { StdioServerManagerClient } from "../shared/stdioServerManagerClient.js";
+import { TelemetryLogger } from "./logging/telemetryLogger.js";
+import { PromptsCache } from "./promptsCache.js";
+import { ToolDefinitionsCache } from "./toolDefinitionsCache.js";
+import { ServersCache } from "./serversCache.js";
+import { PolicyEnforcer } from "./policy/policyEnforcer.js";
 
 /**
  * In-memory global registry for the ToolPlex client.
@@ -14,7 +14,10 @@ import { PolicyEnforcer } from './policy/policyEnforcer.js';
 class Registry {
   private static _clientContext: ClientContext | null = null;
   private static _toolplexApiService: ToolplexApiService | null = null;
-  private static _serverManagerClients: Record<string, StdioServerManagerClient> | null = null;
+  private static _serverManagerClients: Record<
+    string,
+    StdioServerManagerClient
+  > | null = null;
   private static _telemetryLogger: TelemetryLogger | null = null;
   private static _promptsCache: PromptsCache | null = null;
   private static _toolDefinitionsCache: ToolDefinitionsCache | null = null;
@@ -22,8 +25,12 @@ class Registry {
   private static _policyEnforcer: PolicyEnforcer | null = null;
 
   public static async init(clientContext: ClientContext): Promise<void> {
-    if (this._clientContext || this._toolplexApiService || this._serverManagerClients) {
-      throw new Error('Registry already initialized');
+    if (
+      this._clientContext ||
+      this._toolplexApiService ||
+      this._serverManagerClients
+    ) {
+      throw new Error("Registry already initialized");
     }
     this._clientContext = clientContext;
     this._toolplexApiService = new ToolplexApiService(clientContext);
@@ -35,68 +42,76 @@ class Registry {
     this._policyEnforcer = new PolicyEnforcer();
 
     // Tool definitions must be initialized early to use tools like initialize_toolplex.
-    await this._toolDefinitionsCache.init(this._toolplexApiService, clientContext);
+    await this._toolDefinitionsCache.init(
+      this._toolplexApiService,
+      clientContext,
+    );
   }
 
   public static getClientContext(): ClientContext {
     if (!this._clientContext) {
-      throw new Error('ClientContext not initialized in Registry');
+      throw new Error("ClientContext not initialized in Registry");
     }
     return this._clientContext;
   }
 
   public static getToolplexApiService(): ToolplexApiService {
     if (!this._toolplexApiService) {
-      throw new Error('ToolplexApiService not initialized in Registry');
+      throw new Error("ToolplexApiService not initialized in Registry");
     }
     return this._toolplexApiService;
   }
 
-  public static getServerManagerClients(): Record<string, StdioServerManagerClient> {
+  public static getServerManagerClients(): Record<
+    string,
+    StdioServerManagerClient
+  > {
     if (!this._serverManagerClients) {
-      throw new Error('ServerManagerClients not initialized in Registry');
+      throw new Error("ServerManagerClients not initialized in Registry");
     }
     return this._serverManagerClients;
   }
 
-  public static setServerManagerClients(clients: Record<string, StdioServerManagerClient>): void {
+  public static setServerManagerClients(
+    clients: Record<string, StdioServerManagerClient>,
+  ): void {
     if (!this._serverManagerClients) {
-      throw new Error('Registry not initialized');
+      throw new Error("Registry not initialized");
     }
     this._serverManagerClients = clients;
   }
 
   public static getTelemetryLogger(): TelemetryLogger {
     if (!this._telemetryLogger) {
-      throw new Error('TelemetryLogger not initialized in Registry');
+      throw new Error("TelemetryLogger not initialized in Registry");
     }
     return this._telemetryLogger;
   }
 
   public static getPromptsCache(): PromptsCache {
     if (!this._promptsCache) {
-      throw new Error('PromptsCache not initialized in Registry');
+      throw new Error("PromptsCache not initialized in Registry");
     }
     return this._promptsCache;
   }
 
   public static getToolDefinitionsCache(): ToolDefinitionsCache {
     if (!this._toolDefinitionsCache) {
-      throw new Error('ToolDefinitionsCache not initialized in Registry');
+      throw new Error("ToolDefinitionsCache not initialized in Registry");
     }
     return this._toolDefinitionsCache;
   }
 
   public static getServersCache(): ServersCache {
     if (!this._serversCache) {
-      throw new Error('ServersCache not initialized in Registry');
+      throw new Error("ServersCache not initialized in Registry");
     }
     return this._serversCache;
   }
 
   public static getPolicyEnforcer(): PolicyEnforcer {
     if (!this._policyEnforcer) {
-      throw new Error('PolicyEnforcer not initialized in Registry');
+      throw new Error("PolicyEnforcer not initialized in Registry");
     }
     return this._policyEnforcer;
   }

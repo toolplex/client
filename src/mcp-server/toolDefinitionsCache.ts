@@ -1,6 +1,6 @@
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { ToolplexApiService } from './toolplexApi/service.js';
-import { ClientContext } from './clientContext.js';
+import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolplexApiService } from "./toolplexApi/service.js";
+import { ClientContext } from "./clientContext.js";
 
 export class ToolDefinitionsCache {
   private _tools: Tool[] | null = null;
@@ -15,7 +15,10 @@ export class ToolDefinitionsCache {
    * Initialize tools cache by fetching tools from API
    * Handles errors if fetching fails, but does not rethrow.
    */
-  public async init(service: ToolplexApiService, _clientContext: ClientContext): Promise<void> {
+  public async init(
+    service: ToolplexApiService,
+    _clientContext: ClientContext,
+  ): Promise<void> {
     try {
       const toolsResponse = await service.getTools();
       this._tools = toolsResponse.tools;
@@ -31,7 +34,7 @@ export class ToolDefinitionsCache {
    */
   public getTools(): Tool[] {
     if (!this._tools) {
-      throw new Error('ToolDefinitionsCache not initialized');
+      throw new Error("ToolDefinitionsCache not initialized");
     }
     return this._tools;
   }
@@ -41,7 +44,7 @@ export class ToolDefinitionsCache {
    */
   public getTool(name: string): Tool {
     if (!this._tools) {
-      throw new Error('ToolDefinitionsCache not initialized');
+      throw new Error("ToolDefinitionsCache not initialized");
     }
 
     const tool = this._tools.find((t) => t.name === name);
@@ -57,7 +60,7 @@ export class ToolDefinitionsCache {
    */
   public getVersion(): string {
     if (!this._version) {
-      throw new Error('ToolDefinitionsCache not initialized');
+      throw new Error("ToolDefinitionsCache not initialized");
     }
     return this._version;
   }

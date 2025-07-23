@@ -12,10 +12,10 @@
 export function annotateInstalledServer(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   server: any,
-  serversCache: { isInstalled: (id: string) => boolean }
+  serversCache: { isInstalled: (id: string) => boolean },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
-  if (!server || typeof server !== 'object' || !server.server_id) {
+  if (!server || typeof server !== "object" || !server.server_id) {
     return server;
   }
   if (serversCache.isInstalled(server.server_id)) {
@@ -45,7 +45,7 @@ export function annotateInstalledServer(
 export function annotateInstalledServers(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   servers: any[],
-  serversCache: { isInstalled: (id: string) => boolean }
+  serversCache: { isInstalled: (id: string) => boolean },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any[] {
   if (!Array.isArray(servers)) return [];

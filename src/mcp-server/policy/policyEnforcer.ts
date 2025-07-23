@@ -1,10 +1,13 @@
-import { ClientContext } from '../clientContext.js';
-import { PlaybookPolicy } from './playbookPolicy.js';
-import { FeedbackPolicy } from './feedbackPolicy.js';
-import CallToolObserver from './callToolObserver.js';
-import InstallObserver from './installObserver.js';
-import { SavePlaybookParams, SubmitFeedbackParams } from '../../shared/mcpServerTypes.js';
-import { ServerPolicy } from './serverPolicy.js';
+import { ClientContext } from "../clientContext.js";
+import { PlaybookPolicy } from "./playbookPolicy.js";
+import { FeedbackPolicy } from "./feedbackPolicy.js";
+import CallToolObserver from "./callToolObserver.js";
+import InstallObserver from "./installObserver.js";
+import {
+  SavePlaybookParams,
+  SubmitFeedbackParams,
+} from "../../shared/mcpServerTypes.js";
+import { ServerPolicy } from "./serverPolicy.js";
 
 export class PolicyEnforcer {
   private playbookPolicy: PlaybookPolicy | null = null;
@@ -21,11 +24,14 @@ export class PolicyEnforcer {
   public init(clientContext: ClientContext): void {
     this.callToolObserver = new CallToolObserver();
     this.installObserver = new InstallObserver();
-    this.playbookPolicy = new PlaybookPolicy(clientContext, this.callToolObserver);
+    this.playbookPolicy = new PlaybookPolicy(
+      clientContext,
+      this.callToolObserver,
+    );
     this.feedbackPolicy = new FeedbackPolicy(
       clientContext,
       this.callToolObserver,
-      this.installObserver
+      this.installObserver,
     );
     this.serverPolicy = new ServerPolicy(clientContext);
   }
@@ -36,7 +42,7 @@ export class PolicyEnforcer {
    */
   public enforceSavePlaybookPolicy(playbook: SavePlaybookParams): void {
     if (!this.playbookPolicy) {
-      throw new Error('PolicyEnforcer not initialized');
+      throw new Error("PolicyEnforcer not initialized");
     }
     this.playbookPolicy.enforceSavePlaybookPolicy(playbook);
   }
@@ -47,7 +53,7 @@ export class PolicyEnforcer {
    */
   public enforceFeedbackPolicy(feedback: SubmitFeedbackParams): void {
     if (!this.feedbackPolicy) {
-      throw new Error('PolicyEnforcer not initialized');
+      throw new Error("PolicyEnforcer not initialized");
     }
     this.feedbackPolicy.enforceFeedbackPolicy(feedback);
   }
@@ -58,7 +64,7 @@ export class PolicyEnforcer {
    */
   public enforceCallToolPolicy(serverId: string): void {
     if (!this.serverPolicy) {
-      throw new Error('PolicyEnforcer not initialized');
+      throw new Error("PolicyEnforcer not initialized");
     }
     this.serverPolicy.enforceCallToolPolicy(serverId);
   }
@@ -69,7 +75,7 @@ export class PolicyEnforcer {
    */
   public enforceUseServerPolicy(serverId: string): void {
     if (!this.serverPolicy) {
-      throw new Error('PolicyEnforcer not initialized');
+      throw new Error("PolicyEnforcer not initialized");
     }
     this.serverPolicy.enforceUseServerPolicy(serverId);
   }
@@ -80,7 +86,7 @@ export class PolicyEnforcer {
    */
   public enforceLogPlaybookUsagePolicy(): void {
     if (!this.playbookPolicy) {
-      throw new Error('PolicyEnforcer not initialized');
+      throw new Error("PolicyEnforcer not initialized");
     }
     this.playbookPolicy.enforceLogPlaybookUsagePolicy();
   }
@@ -92,9 +98,12 @@ export class PolicyEnforcer {
    * @param getServerId Function that extracts the server ID from an object
    * @returns Filtered list with blocked servers removed
    */
-  public filterBlockedMcpServers<T>(servers: T[], getServerId: (item: T) => string): T[] {
+  public filterBlockedMcpServers<T>(
+    servers: T[],
+    getServerId: (item: T) => string,
+  ): T[] {
     if (!this.serverPolicy) {
-      throw new Error('PolicyEnforcer not initialized');
+      throw new Error("PolicyEnforcer not initialized");
     }
     return this.serverPolicy.filterBlockedMcpServers(servers, getServerId);
   }
@@ -104,7 +113,7 @@ export class PolicyEnforcer {
    */
   public getCallToolObserver(): CallToolObserver {
     if (!this.callToolObserver) {
-      throw new Error('PolicyEnforcer not initialized');
+      throw new Error("PolicyEnforcer not initialized");
     }
     return this.callToolObserver;
   }
@@ -114,7 +123,7 @@ export class PolicyEnforcer {
    */
   public getInstallObserver(): InstallObserver {
     if (!this.installObserver) {
-      throw new Error('PolicyEnforcer not initialized');
+      throw new Error("PolicyEnforcer not initialized");
     }
     return this.installObserver;
   }

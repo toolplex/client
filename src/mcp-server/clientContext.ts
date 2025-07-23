@@ -1,5 +1,5 @@
-import { LLMContext } from '../shared/mcpServerTypes.js';
-import { ClientPermissions, ClientFlags } from './toolplexApi/types.js';
+import { LLMContext } from "../shared/mcpServerTypes.js";
+import { ClientPermissions, ClientFlags } from "./toolplexApi/types.js";
 
 /**
  * Maintains client context for the ToolPlex server
@@ -8,7 +8,7 @@ export class ClientContext {
   private _sessionId: string | null = null;
   private _dev: boolean | null = null;
   private _apiKey: string | null = null;
-  private _clientMode: 'standard' | 'restricted' | null = null;
+  private _clientMode: "standard" | "restricted" | null = null;
   private _llmContext: LLMContext | null = null;
   private _clientVersion: string | null = null;
   private _permissions: ClientPermissions | null = null;
@@ -17,7 +17,7 @@ export class ClientContext {
 
   public get sessionId(): string {
     if (!this._sessionId) {
-      throw new Error('Session ID not set - ToolPlex not initialized');
+      throw new Error("Session ID not set - ToolPlex not initialized");
     }
     return this._sessionId;
   }
@@ -28,7 +28,7 @@ export class ClientContext {
 
   public get dev(): boolean {
     if (this._dev === null) {
-      throw new Error('Dev mode not set - ToolPlex not initialized');
+      throw new Error("Dev mode not set - ToolPlex not initialized");
     }
     return this._dev;
   }
@@ -39,7 +39,7 @@ export class ClientContext {
 
   public get apiKey(): string {
     if (!this._apiKey) {
-      throw new Error('API key not set - ToolPlex not initialized');
+      throw new Error("API key not set - ToolPlex not initialized");
     }
     return this._apiKey;
   }
@@ -48,20 +48,20 @@ export class ClientContext {
     this._apiKey = key;
   }
 
-  public get clientMode(): 'standard' | 'restricted' {
+  public get clientMode(): "standard" | "restricted" {
     if (!this._clientMode) {
-      throw new Error('Client mode not set - ToolPlex not initialized');
+      throw new Error("Client mode not set - ToolPlex not initialized");
     }
     return this._clientMode;
   }
 
-  public set clientMode(mode: 'standard' | 'restricted') {
+  public set clientMode(mode: "standard" | "restricted") {
     this._clientMode = mode;
   }
 
   public get llmContext(): LLMContext {
     if (!this._llmContext) {
-      throw new Error('LLM context not set - ToolPlex not initialized');
+      throw new Error("LLM context not set - ToolPlex not initialized");
     }
     return this._llmContext;
   }
@@ -72,7 +72,7 @@ export class ClientContext {
 
   public get clientVersion(): string {
     if (!this._clientVersion) {
-      throw new Error('Client version not set - ToolPlex not initialized');
+      throw new Error("Client version not set - ToolPlex not initialized");
     }
     return this._clientVersion;
   }
@@ -83,7 +83,7 @@ export class ClientContext {
 
   public get permissions(): ClientPermissions {
     if (!this._permissions) {
-      throw new Error('Permissions not set - ToolPlex not initialized');
+      throw new Error("Permissions not set - ToolPlex not initialized");
     }
     return this._permissions;
   }
@@ -94,7 +94,7 @@ export class ClientContext {
 
   public get flags(): ClientFlags {
     if (!this._flags) {
-      throw new Error('Consts not set - ToolPlex not initialized');
+      throw new Error("Consts not set - ToolPlex not initialized");
     }
     return this._flags;
   }
@@ -105,7 +105,9 @@ export class ClientContext {
 
   public get isOrgUser(): boolean {
     if (this._isOrgUser === null) {
-      throw new Error('Organization user status not set - ToolPlex not initialized');
+      throw new Error(
+        "Organization user status not set - ToolPlex not initialized",
+      );
     }
     return this._isOrgUser;
   }

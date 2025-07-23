@@ -1,6 +1,6 @@
-import { StdioServerManagerClient } from '../shared/stdioServerManagerClient.js';
-import { ListServersResultSchema } from '../shared/serverManagerTypes.js';
-import { FileLogger } from '../shared/fileLogger.js';
+import { StdioServerManagerClient } from "../shared/stdioServerManagerClient.js";
+import { ListServersResultSchema } from "../shared/serverManagerTypes.js";
+import { FileLogger } from "../shared/fileLogger.js";
 
 const logger = FileLogger;
 
@@ -45,7 +45,7 @@ export class ServersCache {
    */
   public isInstalled(serverId: string): boolean {
     if (!this.isInitialized()) {
-      throw new Error('ServersCache not initialized');
+      throw new Error("ServersCache not initialized");
     }
     if (!serverId) {
       throw new Error(`Invalid serverId: "${serverId}"`);
@@ -59,7 +59,7 @@ export class ServersCache {
    */
   public getServerIds(): string[] {
     if (!this._serverIds) {
-      throw new Error('ServersCache not initialized');
+      throw new Error("ServersCache not initialized");
     }
     return Array.from(this._serverIds);
   }
@@ -73,35 +73,35 @@ export class ServersCache {
    * @param serverManagerClients - Record of server manager clients (e.g. from Registry)
    */
   public async refreshCache(
-    serverManagerClients: Record<string, StdioServerManagerClient>
+    serverManagerClients: Record<string, StdioServerManagerClient>,
   ): Promise<void> {
     const allServerIds: Set<string> = new Set();
     for (const [runtime, client] of Object.entries(serverManagerClients)) {
       try {
-        const response_data = await client.sendRequest('list_servers', {});
+        const response_data = await client.sendRequest("list_servers", {});
         if (response_data.error) {
           await logger.warn(
-            `Error from server manager client "${runtime}": ${response_data.error}`
+            `Error from server manager client "${runtime}": ${response_data.error}`,
           );
           continue;
         }
         const parsed = ListServersResultSchema.safeParse(response_data);
         if (!parsed.success) {
           await logger.warn(
-            `Failed to parse list_servers response from "${runtime}": ${JSON.stringify(response_data)}`
+            `Failed to parse list_servers response from "${runtime}": ${JSON.stringify(response_data)}`,
           );
           continue;
         }
         if (parsed.data.servers && parsed.data.servers.length > 0) {
           for (const server of parsed.data.servers) {
-            if (server && typeof server.server_id === 'string') {
+            if (server && typeof server.server_id === "string") {
               allServerIds.add(server.server_id);
             }
           }
         }
       } catch (err) {
         await logger.warn(
-          `Exception while refreshing cache from server manager client "${runtime}": ${err instanceof Error ? err.message : String(err)}`
+          `Exception while refreshing cache from server manager client "${runtime}": ${err instanceof Error ? err.message : String(err)}`,
         );
         // Continue to next client
       }
