@@ -7,6 +7,14 @@ import Registry from "../registry.js";
 
 const logger = FileLogger;
 
+function safeLength(obj: unknown): number {
+  try {
+    return JSON.stringify(obj).length;
+  } catch {
+    return -1;
+  }
+}
+
 export async function handleCallTool(
   params: CallToolParams,
 ): Promise<CallToolResult> {
@@ -67,6 +75,8 @@ export async function handleCallTool(
       log_context: {
         server_id: params.server_id,
         tool_name: params.tool_name,
+        input_length: safeLength(params),
+        response_length: safeLength(content),
       },
       latency_ms: Date.now() - startTime,
     });
