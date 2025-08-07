@@ -70,6 +70,7 @@ export const SearchParamsSchema = z.object({
   expanded_keywords: z.array(z.string()).optional(),
   filter: z.enum(["all", "servers_only", "playbooks_only"]).optional(),
   size: z.number().int().min(1).max(25).optional(),
+  scope: z.enum(["all", "public_only", "private_only"]).optional(),
 });
 
 export type SearchParams = z.infer<typeof SearchParamsSchema>;
@@ -180,6 +181,7 @@ export const SavePlaybookParamsSchema = z.object({
   domain: z.string().optional(),
   keywords: z.array(z.string()).optional(),
   requirements: z.array(z.string()).optional(),
+  privacy: z.enum(["public", "private"]).optional(),
   source_playbook_id: z.string().optional(),
   fork_reason: z.string().optional(),
 });

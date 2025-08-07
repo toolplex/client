@@ -26,6 +26,7 @@ export interface InitResponse {
   is_org_user: boolean;
   prompts: Record<string, string>;
   permissions: ClientPermissions;
+  announcement?: string;
   flags: ClientFlags;
 }
 
@@ -57,6 +58,7 @@ export interface CreatePlaybookRequest {
   domain?: string;
   keywords?: string[];
   requirements?: string[];
+  privacy?: "public" | "private";
   source_playbook_id?: string;
   fork_reason?: string;
 }

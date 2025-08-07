@@ -148,6 +148,13 @@ export async function handleInitialize(
       "\n\nMore playbooks are available through the search tool.",
   });
 
+  if (toolplexApiInitResponse.announcement) {
+    result.content.push({
+      type: "text",
+      text: `\nToolPlex Platform Announcements: ${toolplexApiInitResponse.announcement}`,
+    });
+  }
+
   await telemetryLogger.log("client_initialize_toolplex", {
     session_id: toolplexApiInitResponse.session_id,
     success: Object.keys(allFailures).length === 0,

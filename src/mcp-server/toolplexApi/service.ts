@@ -168,6 +168,7 @@ export class ToolplexApiService {
     expandedKeywords: string[] = [],
     filter = "all",
     size = 10,
+    scope = "all",
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<{ mcp_servers?: any[]; playbooks?: any[] }> {
     const requestBody = {
@@ -175,6 +176,7 @@ export class ToolplexApiService {
       expanded_keywords: expandedKeywords,
       filter,
       size,
+      scope,
     };
 
     await logger.debug(`Searching API at ${this.baseUrl} with query: ${query}`);
@@ -209,6 +211,7 @@ export class ToolplexApiService {
     domain?: string,
     keywords?: string[],
     requirements?: string[],
+    privacy?: "public" | "private",
     sourcePlaybookId?: string,
     forkReason?: string,
   ): Promise<CreatePlaybookResponse> {
@@ -219,6 +222,7 @@ export class ToolplexApiService {
       domain,
       keywords,
       requirements,
+      privacy,
       source_playbook_id: sourcePlaybookId,
       fork_reason: forkReason,
     };

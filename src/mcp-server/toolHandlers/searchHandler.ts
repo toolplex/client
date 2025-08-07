@@ -23,6 +23,7 @@ export async function handleSearchTool(
   const expandedKeywords = params.expanded_keywords || [];
   const filter = params.filter || "all";
   const size = params.size || 10;
+  const scope = params.scope || "all";
 
   try {
     // Check if the client is in restricted mode
@@ -35,6 +36,7 @@ export async function handleSearchTool(
       expandedKeywords,
       filter,
       size,
+      scope,
     );
 
     // Log telemetry event
@@ -43,6 +45,7 @@ export async function handleSearchTool(
       log_context: {
         filter,
         size,
+        scope,
         num_expanded_keywords: expandedKeywords.length,
         num_results:
           (results.mcp_servers?.length ?? -1) +
@@ -120,6 +123,7 @@ export async function handleSearchTool(
       log_context: {
         filter,
         size,
+        scope,
         num_expanded_keywords: expandedKeywords.length,
       },
       pii_sanitized_error_message: errorMessage,

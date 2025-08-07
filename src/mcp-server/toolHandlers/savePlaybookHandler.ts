@@ -38,6 +38,7 @@ export async function handleSavePlaybook(
       domain,
       keywords,
       requirements,
+      privacy,
       source_playbook_id,
       fork_reason,
     } = params;
@@ -48,6 +49,7 @@ export async function handleSavePlaybook(
       domain,
       keywords,
       requirements,
+      privacy,
       source_playbook_id,
       fork_reason,
     );
