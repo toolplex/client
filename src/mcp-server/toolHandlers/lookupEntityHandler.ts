@@ -79,9 +79,6 @@ export async function handleLookupEntityTool(
     }
 
     await logger.debug(`Found entity: ${JSON.stringify(lookupResponse)}`);
-    let response = `Found ${params.entity_type}:\n`;
-    response += JSON.stringify(lookupResponse, null, 2);
-    response += "\n";
 
     await logger.debug("Lookup completed successfully");
 
@@ -94,10 +91,21 @@ export async function handleLookupEntityTool(
       latency_ms: Date.now() - startTime,
     });
 
+    // Return structured data first for easy frontend parsing, then instructions
     const content = [
+      // First: Structured JSON for easy parsing
       {
         type: "text",
-        text: response,
+        text: JSON.stringify({
+          entity_type: params.entity_type,
+          entity_id: params.entity_id,
+          result: lookupResponse,
+        }),
+      } as { [x: string]: unknown; type: "text"; text: string },
+      // Second: Human-readable summary
+      {
+        type: "text",
+        text: `Found ${params.entity_type}: ${lookupResponse.server_name || lookupResponse.description || params.entity_id}`,
       } as { [x: string]: unknown; type: "text"; text: string },
     ];
 

@@ -21,7 +21,7 @@ export async function handleListTools(
 
   try {
     const server_id = params!.server_id as string;
-    let response = "";
+    const content = [];
 
     if (server_id) {
       // Check if server is blocked using policy enforcer
@@ -48,22 +48,38 @@ export async function handleListTools(
         );
       }
 
-      response = promptsCache
-        .getPrompt("list_tools_server_header")
-        .replace("{SERVER_ID}", parsed.data.server_id)
-        .replace("{SERVER_NAME}", parsed.data.server_name);
+      const tools = parsed.data.tools || [];
 
-      if (!parsed.data.tools || parsed.data.tools.length === 0) {
-        response += promptsCache.getPrompt("list_tools_empty");
+      if (tools.length > 0) {
+        // First: Structured JSON for easy parsing
+        content.push({
+          type: "text",
+          text: JSON.stringify({
+            server_id: parsed.data.server_id,
+            server_name: parsed.data.server_name,
+            tools: tools,
+            tool_count: tools.length,
+          }),
+        } as { [x: string]: unknown; type: "text"; text: string });
+
+        // Second: Human-readable summary
+        content.push({
+          type: "text",
+          text: `Available tools from server '${parsed.data.server_name}' (${parsed.data.server_id}): ${tools.length} tool${tools.length !== 1 ? "s" : ""}`,
+        } as { [x: string]: unknown; type: "text"; text: string });
       } else {
-        parsed.data.tools.forEach((tool) => {
-          response += `- ${tool.name}: ${tool.description}\n`;
-          response += `  Input Schema: ${JSON.stringify(tool.inputSchema, null, 2)}\n\n`;
-        });
+        content.push({
+          type: "text",
+          text: promptsCache.getPrompt("list_tools_empty"),
+        } as { [x: string]: unknown; type: "text"; text: string });
       }
     } else {
       await logger.debug("Listing tools from all installed servers");
-      response = promptsCache.getPrompt("list_tools_all_header");
+      const allServerTools: Array<{
+        server_id: string;
+        tools: unknown[];
+      }> = [];
+
       for (const [runtime, client] of Object.entries(serverManagerClients)) {
         const response_data = await client.sendRequest("list_all_tools", {});
         if (response_data.error) {
@@ -87,18 +103,40 @@ export async function handleListTools(
 
         for (const [serverId, serverTools] of filteredEntries) {
           if (serverTools && serverTools.length > 0) {
-            response += `Server: ${serverId}\n`;
-            serverTools.forEach((tool) => {
-              response += `- ${tool.name}: ${tool.description}\n`;
-              response += `  Input Schema: ${JSON.stringify(tool.inputSchema, null, 2)}\n\n`;
+            allServerTools.push({
+              server_id: serverId,
+              tools: serverTools,
             });
-            response += "\n";
           }
         }
       }
 
-      if (response === promptsCache.getPrompt("list_tools_all_header")) {
-        response += promptsCache.getPrompt("list_tools_empty");
+      if (allServerTools.length > 0) {
+        const totalTools = allServerTools.reduce(
+          (sum, server) => sum + server.tools.length,
+          0,
+        );
+
+        // First: Structured JSON for easy parsing
+        content.push({
+          type: "text",
+          text: JSON.stringify({
+            server_tools: allServerTools,
+            server_count: allServerTools.length,
+            total_tools: totalTools,
+          }),
+        } as { [x: string]: unknown; type: "text"; text: string });
+
+        // Second: Human-readable summary
+        content.push({
+          type: "text",
+          text: `Found ${totalTools} tools across ${allServerTools.length} server${allServerTools.length !== 1 ? "s" : ""}`,
+        } as { [x: string]: unknown; type: "text"; text: string });
+      } else {
+        content.push({
+          type: "text",
+          text: promptsCache.getPrompt("list_tools_empty"),
+        } as { [x: string]: unknown; type: "text"; text: string });
       }
     }
 
@@ -114,12 +152,7 @@ export async function handleListTools(
 
     return {
       role: "system",
-      content: [
-        {
-          type: "text",
-          text: response,
-        },
-      ],
+      content,
     };
   } catch (error: unknown) {
     const errorMessage =

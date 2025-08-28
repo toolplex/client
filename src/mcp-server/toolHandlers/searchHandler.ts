@@ -86,33 +86,37 @@ export async function handleSearchTool(
     }
 
     await logger.debug(`Found ${totalResults} results`);
-    let response = promptsCache.getPrompt("search_results_header");
 
-    if ((annotatedServers.length ?? 0) > 0) {
-      response += "\n=== Servers ===\n";
-      response += JSON.stringify(annotatedServers, null, 2);
-      response += "\n";
-    } else {
-      response += "\n(No servers found)\n";
-    }
+    // Build structured response content
+    const content = [
+      // First: Structured JSON for easy parsing
+      {
+        type: "text",
+        text: JSON.stringify({
+          query,
+          expanded_keywords: expandedKeywords,
+          filter,
+          scope,
+          size,
+          servers: annotatedServers,
+          playbooks,
+          server_count: annotatedServers.length,
+          playbook_count: playbooks.length,
+          total_results: totalResults,
+        }),
+      } as { [x: string]: unknown; type: "text"; text: string },
 
-    if (playbooks.length > 0) {
-      response += "\n=== Playbooks ===\n";
-      response += JSON.stringify(playbooks, null, 2);
-      response += "\n";
-    } else {
-      response += "\n(No playbooks found)\n";
-    }
+      // Second: Human-readable summary
+      {
+        type: "text",
+        text: `Found ${totalResults} results for "${query}": ${annotatedServers.length} servers, ${playbooks.length} playbooks`,
+      } as { [x: string]: unknown; type: "text"; text: string },
+    ];
 
     await logger.info("Search completed successfully");
     return {
       role: "system",
-      content: [
-        {
-          type: "text",
-          text: response,
-        },
-      ],
+      content,
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

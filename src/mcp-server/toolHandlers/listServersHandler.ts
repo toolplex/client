@@ -15,7 +15,6 @@ export async function handleListServers(): Promise<CallToolResult> {
 
   try {
     await logger.debug("Listing all installed servers");
-    let response = "Currently installed MCP servers:\n\n";
 
     // Collect all servers for updating the cache
     const allServers: Array<{
@@ -46,10 +45,7 @@ export async function handleListServers(): Promise<CallToolResult> {
         );
 
         filteredServers.forEach((server) => {
-          response += `- Server ID: ${server.server_id}\n`;
-          response += `  Name: ${server.server_name}\n`;
-          response += `  Description: ${server.description}\n\n`;
-          // Add to allServers for cache update
+          // Add to allServers for cache update and structured response
           allServers.push({
             server_id: server.server_id,
             server_name: server.server_name,
@@ -62,10 +58,6 @@ export async function handleListServers(): Promise<CallToolResult> {
     // Update the servers cache with the fresh list
     serversCache.updateServers(allServers);
 
-    if (response === "Currently installed MCP servers:\n\n") {
-      response = promptsCache.getPrompt("list_servers_empty");
-    }
-
     await logger.debug("Successfully retrieved servers list");
 
     await telemetryLogger.log("client_list_servers", {
@@ -73,12 +65,32 @@ export async function handleListServers(): Promise<CallToolResult> {
       latency_ms: Date.now() - startTime,
     });
 
+    // Build response content
+    if (allServers.length === 0) {
+      return {
+        role: "system",
+        content: [
+          {
+            type: "text",
+            text: promptsCache.getPrompt("list_servers_empty"),
+          },
+        ],
+      };
+    }
+
     return {
       role: "system",
       content: [
         {
           type: "text",
-          text: response,
+          text: JSON.stringify({
+            servers: allServers,
+            count: allServers.length,
+          }),
+        },
+        {
+          type: "text",
+          text: `Found ${allServers.length} installed MCP server${allServers.length !== 1 ? "s" : ""}`,
         },
       ],
     };
