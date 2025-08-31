@@ -38,6 +38,22 @@ export async function handleLookupEntityTool(
       params.entity_id,
     );
 
+    // Annotate installed server using resultAnnotators
+    if (
+      params.entity_type === "server" &&
+      lookupResponse &&
+      typeof lookupResponse === "object" &&
+      lookupResponse.result &&
+      typeof lookupResponse.result === "object"
+    ) {
+      try {
+        lookupResponse.result = annotateInstalledServer(lookupResponse.result, serversCache);
+      } catch (err) {
+        await logger.warn(`Error annotating installed server: ${err}`);
+        // fallback: do not annotate
+      }
+    }
+
     if (!lookupResponse) {
       await logger.debug("No entity found");
 
@@ -62,20 +78,6 @@ export async function handleLookupEntityTool(
           } as { [x: string]: unknown; type: "text"; text: string },
         ],
       };
-    }
-
-    // Use resultAnnotators to annotate if the server is installed
-    if (
-      params.entity_type === "server" &&
-      lookupResponse &&
-      typeof lookupResponse === "object"
-    ) {
-      try {
-        lookupResponse = annotateInstalledServer(lookupResponse, serversCache);
-      } catch (err) {
-        await logger.warn(`Error annotating installed server: ${err}`);
-        // fallback: do not annotate
-      }
     }
 
     await logger.debug(`Found entity: ${JSON.stringify(lookupResponse)}`);
