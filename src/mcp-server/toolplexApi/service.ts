@@ -206,6 +206,7 @@ export class ToolplexApiService {
   }
 
   public async createPlaybook(
+    playbook_name: string,
     description: string,
     actions: Array<PlaybookAction>,
     domain?: string,
@@ -216,6 +217,7 @@ export class ToolplexApiService {
     forkReason?: string,
   ): Promise<CreatePlaybookResponse> {
     const requestBody: CreatePlaybookRequest = {
+      playbook_name,
       description,
       actions,
       llm_context: this.clientContext.llmContext,

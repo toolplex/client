@@ -52,6 +52,7 @@ export interface LlmContext {
 }
 
 export interface CreatePlaybookRequest {
+  playbook_name: string;
   description: string;
   actions: Array<{ do: string; call?: string }>;
   llm_context: LlmContext;

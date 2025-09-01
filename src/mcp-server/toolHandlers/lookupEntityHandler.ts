@@ -33,7 +33,7 @@ export async function handleLookupEntityTool(
       policyEnforcer.enforceUseServerPolicy(params.entity_id);
     }
 
-    let lookupResponse = await apiService.lookupEntity(
+    const lookupResponse = await apiService.lookupEntity(
       params.entity_type,
       params.entity_id,
     );
@@ -47,7 +47,10 @@ export async function handleLookupEntityTool(
       typeof lookupResponse.result === "object"
     ) {
       try {
-        lookupResponse.result = annotateInstalledServer(lookupResponse.result, serversCache);
+        lookupResponse.result = annotateInstalledServer(
+          lookupResponse.result,
+          serversCache,
+        );
       } catch (err) {
         await logger.warn(`Error annotating installed server: ${err}`);
         // fallback: do not annotate

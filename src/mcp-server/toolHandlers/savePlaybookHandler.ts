@@ -33,6 +33,7 @@ export async function handleSavePlaybook(
     policyEnforcer.enforceSavePlaybookPolicy(params);
 
     const {
+      playbook_name,
       description,
       actions,
       domain,
@@ -44,6 +45,7 @@ export async function handleSavePlaybook(
     } = params;
 
     const response = await apiService.createPlaybook(
+      playbook_name,
       description,
       actions,
       domain,

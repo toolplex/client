@@ -164,6 +164,7 @@ export type PlaybookAction = z.infer<typeof PlaybookActionSchema>;
 // SavePlaybookParams
 // --------------------
 export const SavePlaybookParamsSchema = z.object({
+  playbook_name: z.string(),
   description: z.string(),
   // Requires at least one action to have a "call" property
   actions: z
