@@ -9,8 +9,84 @@ import {
 } from "../../shared/serverManagerTypes.js";
 import Registry from "../registry.js";
 import { RuntimeCheck } from "../utils/runtimeCheck.js";
+import { isAbsolute, parse } from "path";
 
 const logger = FileLogger;
+
+/**
+ * Sanitizes ServerConfig for telemetry logging by extracting aggregate patterns
+ * while avoiding PII exposure. This function extracts useful installation patterns
+ * without logging sensitive data like file paths, API keys, or user-specific values.
+ *
+ * SECURITY: This function only logs metadata patterns, never actual values:
+ * - Command names (not paths): "npx" vs "/Users/john/bin/tool"
+ * - Argument flags (not values): "--port" vs actual port numbers
+ * - Environment variable names (not values): "API_KEY" vs actual keys
+ * - Path types for portability analysis: "absolute" vs "package_manager"
+ */
+function sanitizeServerConfig(config: ServerConfig) {
+  // Extract command executable name without sensitive path information
+  const extractCommandType = (command?: string): string => {
+    if (!command) return "none";
+    // For absolute paths, extract only the executable name (e.g., "/usr/bin/node" -> "node")
+    if (isAbsolute(command)) {
+      return parse(command).name;
+    }
+    // For relative commands, get the base command (e.g., "npx" from "npx --version")
+    return (
+      command
+        .split(/[\s/\\]/)
+        .pop()
+        ?.split(".")[0] || "unknown"
+    );
+  };
+
+  // Categorize path types for portability analysis - helps identify installation reliability patterns
+  const detectPathType = (
+    command?: string,
+    args?: string[],
+  ): "absolute" | "package_manager" | "system_command" => {
+    if (!command) return "system_command";
+    // Absolute paths indicate potential portability issues
+    if (isAbsolute(command) || args?.some((arg) => isAbsolute(arg))) {
+      return "absolute";
+    }
+    // Package managers are typically more reliable across systems
+    if (["npx", "uvx", "pip", "yarn", "pnpm"].includes(command)) {
+      return "package_manager";
+    }
+    return "system_command";
+  };
+
+  // Extract common argument flags and patterns (not values) for usage analysis
+  const extractArgPatterns = (args?: string[]): string[] => {
+    return (
+      args?.filter(
+        (arg) =>
+          arg.startsWith("-") || // Command flags like --port, --config
+          ["stdio", "mcp", "start", "latest", "@latest"].includes(arg), // Common MCP patterns
+      ) || []
+    );
+  };
+
+  // Extract environment variable names (not values) to understand integration patterns
+  // SAFE: Only logs key names like "API_KEY", "DATABASE_URL" - never the actual values
+  const extractEnvKeys = (env?: Record<string, string>): string[] => {
+    if (!env) return [];
+    return Object.keys(env).sort();
+  };
+
+  return {
+    runtime: config.runtime || "node",
+    transport: config.transport,
+    command_type: extractCommandType(config.command),
+    path_type: detectPathType(config.command, config.args),
+    arg_patterns: extractArgPatterns(config.args),
+    arg_count: config.args?.length || 0,
+    env_keys: extractEnvKeys(config.env),
+    env_count: config.env ? Object.keys(config.env).length : 0,
+  };
+}
 
 async function installServer(
   serverId: string,
@@ -144,6 +220,7 @@ export async function handleInstallServer(
       success: true,
       log_context: {
         server_id: installResult.server_id,
+        sanitized_config: sanitizeServerConfig(config),
       },
       latency_ms: Date.now() - startTime,
     });
