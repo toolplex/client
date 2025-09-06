@@ -75,7 +75,6 @@ export async function handleSearchTool(
     if (totalResults === 0) {
       await logger.info("No search results found");
       return {
-        role: "system",
         content: [
           {
             type: "text",
@@ -115,7 +114,6 @@ export async function handleSearchTool(
 
     await logger.info("Search completed successfully");
     return {
-      role: "system",
       content,
     };
   } catch (error) {
@@ -135,7 +133,7 @@ export async function handleSearchTool(
     });
 
     return {
-      role: "system",
+      isError: true,
       content: [
         {
           type: "text",

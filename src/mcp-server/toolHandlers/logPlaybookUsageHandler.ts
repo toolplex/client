@@ -46,7 +46,6 @@ export async function handleLogPlaybookUsage(
     });
 
     return {
-      role: "system",
       content: [
         {
           type: "text",
@@ -69,7 +68,7 @@ export async function handleLogPlaybookUsage(
     });
 
     return {
-      role: "system",
+      isError: true,
       content: [
         {
           type: "text",

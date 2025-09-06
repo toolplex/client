@@ -68,7 +68,6 @@ export async function handleListServers(): Promise<CallToolResult> {
     // Build response content
     if (allServers.length === 0) {
       return {
-        role: "system",
         content: [
           {
             type: "text",
@@ -79,7 +78,6 @@ export async function handleListServers(): Promise<CallToolResult> {
     }
 
     return {
-      role: "system",
       content: [
         {
           type: "text",
@@ -108,7 +106,7 @@ export async function handleListServers(): Promise<CallToolResult> {
     });
 
     return {
-      role: "system",
+      isError: true,
       content: [
         {
           type: "text",

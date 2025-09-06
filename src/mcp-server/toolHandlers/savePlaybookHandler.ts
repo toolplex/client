@@ -68,7 +68,6 @@ export async function handleSavePlaybook(
     });
 
     return {
-      role: "system",
       content: [
         {
           type: "text",
@@ -89,7 +88,7 @@ export async function handleSavePlaybook(
     });
 
     return {
-      role: "system",
+      isError: true,
       content: [
         {
           type: "text",

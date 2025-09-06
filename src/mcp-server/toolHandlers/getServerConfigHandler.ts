@@ -53,7 +53,6 @@ export async function handleGetServerConfig(
     });
 
     return {
-      role: "system",
       content: [
         {
           type: "text",
@@ -83,7 +82,7 @@ export async function handleGetServerConfig(
     });
 
     return {
-      role: "system",
+      isError: true,
       content: [
         {
           type: "text",

@@ -57,7 +57,6 @@ export async function handleSubmitFeedback(
     });
 
     return {
-      role: "system",
       content: [
         {
           type: "text",
@@ -82,7 +81,7 @@ export async function handleSubmitFeedback(
     });
 
     return {
-      role: "system",
+      isError: true,
       content: [
         {
           type: "text",

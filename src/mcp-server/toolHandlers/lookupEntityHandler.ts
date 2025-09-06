@@ -70,7 +70,7 @@ export async function handleLookupEntityTool(
       });
 
       return {
-        role: "system",
+        isError: true,
         content: [
           {
             type: "text",
@@ -122,7 +122,6 @@ export async function handleLookupEntityTool(
     }
 
     return {
-      role: "system",
       content,
     };
   } catch (err: unknown) {
@@ -140,7 +139,7 @@ export async function handleLookupEntityTool(
     });
 
     return {
-      role: "system",
+      isError: true,
       content: [
         {
           type: "text",

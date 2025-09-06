@@ -74,7 +74,6 @@ export async function handleInitialize(
 
   // Safe to use prompts after init.
   const result: CallToolResult = {
-    role: "system",
     content: [
       {
         type: "text",

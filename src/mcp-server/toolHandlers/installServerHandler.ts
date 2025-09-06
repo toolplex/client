@@ -244,7 +244,6 @@ export async function handleInstallServer(
     }
 
     return {
-      role: "system",
       content,
     };
   } catch (error: unknown) {
@@ -280,7 +279,7 @@ export async function handleInstallServer(
     }
 
     return {
-      role: "system",
+      isError: true,
       content,
     };
   } finally {

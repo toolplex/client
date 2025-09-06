@@ -82,7 +82,6 @@ export async function handleCallTool(
     });
 
     return {
-      role: "system",
       content: content,
     };
   } catch (error: unknown) {
@@ -104,7 +103,7 @@ export async function handleCallTool(
     });
 
     return {
-      role: "system",
+      isError: true,
       content: [
         {
           type: "text",

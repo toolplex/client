@@ -151,7 +151,6 @@ export async function handleListTools(
     });
 
     return {
-      role: "system",
       content,
     };
   } catch (error: unknown) {
@@ -171,7 +170,7 @@ export async function handleListTools(
     });
 
     return {
-      role: "system",
+      isError: true,
       content: [
         {
           type: "text",

@@ -61,7 +61,6 @@ export async function handleUninstallServer(
     });
 
     return {
-      role: "system",
       content: [
         {
           type: "text",
@@ -87,7 +86,7 @@ export async function handleUninstallServer(
     });
 
     return {
-      role: "system",
+      isError: true,
       content: [
         {
           type: "text",
