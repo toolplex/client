@@ -112,7 +112,7 @@ export async function serve(config: ToolplexServerConfig): Promise<void> {
 
     if (!Registry.getToolDefinitionsCache().isInitialized()) {
       result = {
-        role: "system",
+        isError: true,
         content: [
           {
             type: "text",
