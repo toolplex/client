@@ -3,6 +3,10 @@ import { findServerManagerClient } from "./serverManagerUtils.js";
 import { UninstallParams } from "../../shared/mcpServerTypes.js";
 import { ServerUninstallResultSchema } from "../../shared/serverManagerTypes.js";
 import { FileLogger } from "../../shared/fileLogger.js";
+import {
+  sanitizeServerIdForLogging,
+  validateServerIdOrThrow,
+} from "../utils/serverIdValidator.js";
 import Registry from "../registry.js";
 
 const logger = FileLogger;
@@ -29,6 +33,10 @@ export async function handleUninstallServer(
     }
 
     const server_id = params!.server_id as string;
+
+    // Validate server ID format
+    validateServerIdOrThrow(server_id);
+
     await logger.info(`Handling uninstall request for server ${server_id}`);
 
     const client = await findServerManagerClient(
@@ -55,7 +63,7 @@ export async function handleUninstallServer(
     await telemetryLogger.log("client_uninstall", {
       success: true,
       log_context: {
-        server_id: parsed.data.server_id,
+        server_id: sanitizeServerIdForLogging(parsed.data.server_id),
       },
       latency_ms: Date.now() - startTime,
     });
@@ -81,6 +89,9 @@ export async function handleUninstallServer(
 
     await telemetryLogger.log("client_uninstall", {
       success: false,
+      log_context: {
+        server_id: sanitizeServerIdForLogging(params.server_id),
+      },
       pii_sanitized_error_message: errorMessage,
       latency_ms: Date.now() - startTime,
     });

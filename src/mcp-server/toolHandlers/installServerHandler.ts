@@ -9,6 +9,10 @@ import {
 } from "../../shared/serverManagerTypes.js";
 import Registry from "../registry.js";
 import { RuntimeCheck } from "../utils/runtimeCheck.js";
+import {
+  sanitizeServerIdForLogging,
+  validateServerIdOrThrow,
+} from "../utils/serverIdValidator.js";
 import { isAbsolute, parse } from "path";
 
 const logger = FileLogger;
@@ -158,6 +162,9 @@ export async function handleInstallServer(
       throw new Error("Missing required install parameters");
     }
 
+    // Validate server ID format
+    validateServerIdOrThrow(server_id);
+
     // Validate command is installed before proceeding
     if (config.command) {
       await RuntimeCheck.validateCommandOrThrow(config.command);
@@ -219,7 +226,7 @@ export async function handleInstallServer(
     await telemetryLogger.log("client_install", {
       success: true,
       log_context: {
-        server_id: installResult.server_id,
+        server_id: sanitizeServerIdForLogging(installResult.server_id),
         sanitized_config: sanitizeServerConfig(config),
       },
       latency_ms: Date.now() - startTime,
@@ -256,7 +263,7 @@ export async function handleInstallServer(
     await telemetryLogger.log("client_install", {
       success: false,
       log_context: {
-        server_id: params.server_id,
+        server_id: sanitizeServerIdForLogging(params.server_id),
       },
       pii_sanitized_error_message: errorMessage,
       latency_ms: Date.now() - startTime,

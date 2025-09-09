@@ -6,6 +6,10 @@ import {
   ListToolsResultSchema,
   ListAllToolsResultSchema,
 } from "../../shared/serverManagerTypes.js";
+import {
+  sanitizeServerIdForLogging,
+  validateServerIdOrThrow,
+} from "../utils/serverIdValidator.js";
 import Registry from "../registry.js";
 
 const logger = FileLogger;
@@ -24,6 +28,9 @@ export async function handleListTools(
     const content = [];
 
     if (server_id) {
+      // Validate server ID format
+      validateServerIdOrThrow(server_id);
+
       // Check if server is blocked using policy enforcer
       policyEnforcer.enforceUseServerPolicy(server_id);
 
@@ -145,7 +152,7 @@ export async function handleListTools(
     await telemetryLogger.log("client_list_tools", {
       success: true,
       log_context: {
-        server_id: params.server_id,
+        server_id: sanitizeServerIdForLogging(params.server_id || ""),
       },
       latency_ms: Date.now() - startTime,
     });
@@ -163,7 +170,7 @@ export async function handleListTools(
     await telemetryLogger.log("client_list_tools", {
       success: false,
       log_context: {
-        server_id: params.server_id,
+        server_id: sanitizeServerIdForLogging(params.server_id || ""),
       },
       pii_sanitized_error_message: errorMessage,
       latency_ms: Date.now() - startTime,

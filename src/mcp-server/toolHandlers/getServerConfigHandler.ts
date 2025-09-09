@@ -2,6 +2,10 @@ import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { FileLogger } from "../../shared/fileLogger.js";
 import { findServerManagerClient } from "./serverManagerUtils.js";
 import { GetServerConfigParams } from "../../shared/mcpServerTypes.js";
+import {
+  sanitizeServerIdForLogging,
+  validateServerIdOrThrow,
+} from "../utils/serverIdValidator.js";
 import Registry from "../registry.js";
 
 const logger = FileLogger;
@@ -20,6 +24,9 @@ export async function handleGetServerConfig(
     if (!server_id) {
       throw new Error("Missing server_id");
     }
+
+    // Validate server ID format
+    validateServerIdOrThrow(server_id);
 
     // Check if server is blocked using policy enforcer
     policyEnforcer.enforceUseServerPolicy(server_id);
@@ -47,7 +54,7 @@ export async function handleGetServerConfig(
     await telemetryLogger.log("client_get_server_config", {
       success: true,
       log_context: {
-        server_id,
+        server_id: sanitizeServerIdForLogging(server_id),
       },
       latency_ms: Date.now() - startTime,
     });
@@ -75,7 +82,7 @@ export async function handleGetServerConfig(
     await telemetryLogger.log("client_get_server_config", {
       success: false,
       log_context: {
-        server_id: params.server_id,
+        server_id: sanitizeServerIdForLogging(params.server_id || ""),
       },
       pii_sanitized_error_message: errorMessage,
       latency_ms: Date.now() - startTime,

@@ -3,6 +3,10 @@ import { CallToolParams } from "../../shared/mcpServerTypes.js";
 import { findServerManagerClient } from "./serverManagerUtils.js";
 import { CallToolResultSchema } from "../../shared/serverManagerTypes.js";
 import { FileLogger } from "../../shared/fileLogger.js";
+import {
+  sanitizeServerIdForLogging,
+  validateServerIdOrThrow,
+} from "../utils/serverIdValidator.js";
 import Registry from "../registry.js";
 
 const logger = FileLogger;
@@ -33,6 +37,9 @@ export async function handleCallTool(
   const callToolObserver = policyEnforcer.getCallToolObserver();
 
   try {
+    // Validate server ID format
+    validateServerIdOrThrow(params.server_id);
+
     // Enforce call tool policy
     policyEnforcer.enforceCallToolPolicy(params.server_id);
 
@@ -73,7 +80,7 @@ export async function handleCallTool(
     await telemetryLogger.log("client_call_tool", {
       success: true,
       log_context: {
-        server_id: params.server_id,
+        server_id: sanitizeServerIdForLogging(params.server_id),
         tool_name: params.tool_name,
         input_length: safeLength(params),
         response_length: safeLength(content),
@@ -95,7 +102,7 @@ export async function handleCallTool(
     await telemetryLogger.log("client_call_tool", {
       success: false,
       log_context: {
-        server_id: params.server_id,
+        server_id: sanitizeServerIdForLogging(params.server_id),
         tool_name: params.tool_name,
       },
       pii_sanitized_error_message: errorMessage,
