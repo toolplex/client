@@ -40,6 +40,12 @@ export async function handleInitialize(
     memory: `${Math.round(os.totalmem() / (1024 * 1024 * 1024))}GB`,
     cpuCores: os.cpus().length,
     workDir: process.cwd(),
+    date: new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
   };
 
   await logger.debug("Initializing server managers and API service");
@@ -83,7 +89,8 @@ export async function handleInitialize(
           .replace("{ARGS.arch}", systemInfo.arch)
           .replace("{ARGS.memory}", systemInfo.memory)
           .replace("{ARGS.cpuCores}", systemInfo.cpuCores.toString())
-          .replace("{ARGS.workDir}", systemInfo.workDir),
+          .replace("{ARGS.workDir}", systemInfo.workDir)
+          .replace("{ARGS.date}", systemInfo.date),
       },
     ],
   };
