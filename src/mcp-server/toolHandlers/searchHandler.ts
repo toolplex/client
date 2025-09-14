@@ -105,10 +105,10 @@ export async function handleSearchTool(
         }),
       } as { [x: string]: unknown; type: "text"; text: string },
 
-      // Second: Human-readable summary
+      // Second: Followup instructions
       {
         type: "text",
-        text: `Found ${totalResults} results for "${query}": ${annotatedServers.length} servers, ${playbooks.length} playbooks`,
+        text: promptsCache.getPrompt("search_results_footer"),
       } as { [x: string]: unknown; type: "text"; text: string },
     ];
 
