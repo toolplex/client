@@ -175,7 +175,7 @@ export class ServerManager {
   async connectWithHandshakeTimeout(
     client: Client,
     transport: SSEClientTransport | StdioClientTransport,
-    ms = 30000,
+    ms = 60000,
   ): Promise<{ tools?: Tool[] }> {
     let connectTimeout: NodeJS.Timeout;
     let listToolsTimeout: NodeJS.Timeout;
@@ -306,7 +306,7 @@ export class ServerManager {
       const toolsResponse = await this.connectWithHandshakeTimeout(
         client,
         transport,
-        30000,
+        60000,
       );
       const tools = toolsResponse.tools || [];
 
