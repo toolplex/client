@@ -4,6 +4,7 @@ import os from "os";
 import { InitializeToolplexParams } from "../../shared/mcpServerTypes.js";
 import { initServerManagersOnly } from "../utils/initServerManagers.js";
 import Registry from "../registry.js";
+import envPaths from "env-paths";
 
 const logger = FileLogger;
 
@@ -34,12 +35,13 @@ export async function handleInitialize(
         ? "Windows"
         : platform.charAt(0).toUpperCase() + platform.slice(1);
 
+  const paths = envPaths("ToolPlex", { suffix: "" });
   const systemInfo = {
     os: `${osName} ${os.release()}`,
     arch: os.arch(),
     memory: `${Math.round(os.totalmem() / (1024 * 1024 * 1024))}GB`,
     cpuCores: os.cpus().length,
-    workDir: process.cwd(),
+    workDir: paths.data,
     date: new Date().toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
@@ -63,7 +65,16 @@ export async function handleInitialize(
   clientContext.sessionId = toolplexApiInitResponse.session_id;
   clientContext.permissions = toolplexApiInitResponse.permissions;
   clientContext.flags = toolplexApiInitResponse.flags;
-  promptsCache.init(toolplexApiInitResponse.prompts);
+
+  // Replace {ARGS.workDir} in all prompts before initializing the cache
+  const processedPrompts = { ...toolplexApiInitResponse.prompts };
+  for (const [key, prompt] of Object.entries(processedPrompts)) {
+    if (typeof prompt === "string") {
+      processedPrompts[key] = prompt.replace(/\{ARGS\.workDir\}/g, paths.data);
+    }
+  }
+  promptsCache.init(processedPrompts);
+
   // Init PolicyEnforce after setting permissions and flags
   policyEnforcer.init(clientContext);
 
