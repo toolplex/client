@@ -138,6 +138,10 @@ export interface LogTelemetryBatchResponse {
 }
 
 export interface SearchResponse {
+  // Unified format (v0.1.16+)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  entities?: any[];
+  // Legacy format (< v0.1.16)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mcp_servers?: any[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

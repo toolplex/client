@@ -13,6 +13,7 @@ import {
   LogTelemetryBatchResponse,
   InitRequest,
   InitResponse,
+  SearchResponse,
 } from "./types.js";
 import os from "os";
 import { ClientContext } from "../clientContext.js";
@@ -169,8 +170,7 @@ export class ToolplexApiService {
     filter = "all",
     size = 10,
     scope = "all",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Promise<{ mcp_servers?: any[]; playbooks?: any[] }> {
+  ): Promise<SearchResponse> {
     const requestBody = {
       query,
       expanded_keywords: expandedKeywords,
@@ -193,12 +193,7 @@ export class ToolplexApiService {
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      return (await response.json()) as {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        mcp_servers?: any[];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        playbooks?: any[];
-      };
+      return (await response.json()) as SearchResponse;
     } catch (err) {
       await logger.error(`Error during search request: ${err}`);
       throw err;
