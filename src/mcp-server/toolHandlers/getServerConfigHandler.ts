@@ -63,12 +63,7 @@ export async function handleGetServerConfig(
       content: [
         {
           type: "text",
-          text:
-            promptsCache
-              .getPrompt("get_server_config_header")
-              .replace("{SERVER_ID}", server_id) +
-            "\n" +
-            JSON.stringify(config, null, 2),
+          text: JSON.stringify(config, null, 2),
         },
       ],
     };
