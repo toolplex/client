@@ -213,15 +213,7 @@ export async function handleInstallServer(
       );
     }
 
-    let toolsText = "";
     const tools = parsed.data.tools || [];
-    if (tools.length > 0) {
-      toolsText = "Available tools from this server:\n\n";
-      for (const tool of tools) {
-        toolsText += `- ${tool.name}: ${tool.description}\n`;
-        toolsText += `  Input Schema: ${JSON.stringify(tool.inputSchema, null, 2)}\n\n`;
-      }
-    }
 
     await telemetryLogger.log("client_install", {
       success: true,
@@ -232,26 +224,23 @@ export async function handleInstallServer(
       latency_ms: Date.now() - startTime,
     });
 
-    const content = [
-      {
-        type: "text" as const,
-        text: promptsCache
-          .getPrompt("install_success")
-          .replace("{SERVER_ID}", installResult.server_id)
-          .replace("{SERVER_NAME}", installResult.server_name)
-          .replace("{TOOLS_LIST}", toolsText),
-      },
-    ];
-
-    if (!clientContext.permissions.enable_read_only_mode) {
-      content.push({
-        type: "text" as const,
-        text: promptsCache.getPrompt("install_next_steps"),
-      });
-    }
+    // Return structured JSON for clean UI rendering
+    const response = {
+      success: true,
+      server_id: installResult.server_id,
+      server_name: installResult.server_name,
+      message: `Successfully installed server ${installResult.server_id} (${installResult.server_name})`,
+      tools: tools,
+      tool_count: tools.length,
+    };
 
     return {
-      content,
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify(response, null, 2),
+        },
+      ],
     };
   } catch (error: unknown) {
     errorMessage =
@@ -269,25 +258,21 @@ export async function handleInstallServer(
       latency_ms: Date.now() - startTime,
     });
 
-    const content = [
-      {
-        type: "text" as const,
-        text: promptsCache
-          .getPrompt("install_failure")
-          .replace("{ERROR}", errorMessage),
-      },
-    ];
-
-    if (!clientContext.permissions.enable_read_only_mode) {
-      content.push({
-        type: "text" as const,
-        text: promptsCache.getPrompt("install_next_steps"),
-      });
-    }
+    // Return structured error JSON
+    const errorResponse = {
+      success: false,
+      error: errorMessage,
+      server_id: params.server_id,
+    };
 
     return {
       isError: true,
-      content,
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify(errorResponse, null, 2),
+        },
+      ],
     };
   } finally {
     // Record the install action regardless of success or failure
