@@ -7,7 +7,7 @@ import Registry from "../registry.js";
 import envPaths from "env-paths";
 import which from "which";
 import { getEnhancedPath } from "../../shared/enhancedPath.js";
-import { existsSync } from "fs";
+import * as fs from "fs";
 
 const logger = FileLogger;
 
@@ -16,13 +16,15 @@ const logger = FileLogger;
  * 1. Bundled dependency (if available)
  * 2. System PATH (fallback)
  * 3. "not available" if neither exists
+ *
+ * Exported for testing purposes.
  */
-function resolveDependencyForInit(
+export function resolveDependencyForInit(
   bundledPath: string | undefined,
   commandName: string,
 ): string {
   // Check bundled first
-  if (bundledPath && existsSync(bundledPath)) {
+  if (bundledPath && fs.existsSync(bundledPath)) {
     return bundledPath;
   }
 

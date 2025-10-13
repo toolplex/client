@@ -1,5 +1,5 @@
 import * as path from "path";
-import { existsSync } from "fs";
+import * as fs from "fs";
 import { homedir } from "os";
 import { glob } from "glob";
 
@@ -22,13 +22,13 @@ export function getEnhancedPath(): string {
     if (extraPath.includes("*")) {
       const matches = glob.sync(extraPath);
       for (const match of matches) {
-        if (existsSync(match) && !seen.has(match)) {
+        if (fs.existsSync(match) && !seen.has(match)) {
           seen.add(match);
           allPaths.unshift(match);
         }
       }
     } else {
-      if (existsSync(extraPath) && !seen.has(extraPath)) {
+      if (fs.existsSync(extraPath) && !seen.has(extraPath)) {
         seen.add(extraPath);
         allPaths.unshift(extraPath);
       }

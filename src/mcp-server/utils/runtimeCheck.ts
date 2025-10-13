@@ -1,7 +1,7 @@
 import { getEnhancedPath } from "../../shared/enhancedPath.js";
 import which from "which";
 import Registry from "../registry.js";
-import { existsSync } from "fs";
+import * as fs from "fs";
 
 const INSTALL_HINTS: Record<string, string> = {
   uvx: "Install uvx: https://docs.astral.sh/uv/getting-started/installation/",
@@ -49,14 +49,14 @@ export class RuntimeCheck {
         commandName as "node" | "python" | "git" | "uvx" | "npx",
       );
 
-      if (bundledPath && existsSync(bundledPath)) {
+      if (bundledPath && fs.existsSync(bundledPath)) {
         return bundledPath;
       }
 
       // Handle python3 -> python mapping for bundled deps
       if (commandName === "python3") {
         const pythonPath = Registry.getBundledDependencyPath("python");
-        if (pythonPath && existsSync(pythonPath)) {
+        if (pythonPath && fs.existsSync(pythonPath)) {
           return pythonPath;
         }
       }

@@ -16,12 +16,17 @@
     "access": "public"
   },
   "scripts": {
-    "build": "node scripts/generate-version-file.js && rm -rf dist && tsc && node scripts/add-shebang.js",
+    "build": "node scripts/generate-version-file.js && rm -rf dist && tsc && tsc -p tsconfig.test.json && node scripts/add-shebang.js",
     "start": "node ./dist/mcp-server/index.js",
     "watch": "tsc --watch",
     "lint": "eslint 'src/**/*.{ts,js}'",
     "lint:fix": "eslint 'src/**/*.{ts,js}' --fix",
-    "format": "prettier --write 'src/**/*.{ts,js,json,md}'"
+    "format": "prettier --write 'src/**/*.{ts,js,json,md}'",
+    "test": "npm run build && node --test dist/tests/unit/**/*.test.js",
+    "test:full": "npm run build && node --test dist/tests/**/*.test.js",
+    "test:unit": "npm run build && node --test dist/tests/unit/**/*.test.js",
+    "test:watch": "npm run build && node --test --watch dist/tests/**/*.test.js",
+    "test:coverage": "npm run build && node --experimental-test-coverage --test dist/tests/**/*.test.js"
   },
   "keywords": [
     "mcp",

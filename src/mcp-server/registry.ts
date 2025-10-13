@@ -128,10 +128,10 @@ class Registry {
 
   /**
    * Get bundled dependencies (paths to required executables).
-   * Returns empty object if not set.
+   * Returns a copy of the bundled dependencies object.
    */
   public static getBundledDependencies(): BundledDependencies {
-    return this._bundledDependencies;
+    return { ...this._bundledDependencies };
   }
 
   /**
