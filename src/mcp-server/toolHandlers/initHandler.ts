@@ -5,8 +5,43 @@ import { InitializeToolplexParams } from "../../shared/mcpServerTypes.js";
 import { initServerManagersOnly } from "../utils/initServerManagers.js";
 import Registry from "../registry.js";
 import envPaths from "env-paths";
+import which from "which";
+import { getEnhancedPath } from "../../shared/enhancedPath.js";
+import { existsSync } from "fs";
 
 const logger = FileLogger;
+
+/**
+ * Helper to resolve dependency path with fallback:
+ * 1. Bundled dependency (if available)
+ * 2. System PATH (fallback)
+ * 3. "not available" if neither exists
+ */
+function resolveDependencyForInit(
+  bundledPath: string | undefined,
+  commandName: string,
+): string {
+  // Check bundled first
+  if (bundledPath && existsSync(bundledPath)) {
+    return bundledPath;
+  }
+
+  // Fall back to system PATH
+  try {
+    const enhancedPath = getEnhancedPath();
+    const systemPath = which.sync(commandName, {
+      path: enhancedPath,
+      nothrow: true,
+    });
+    if (systemPath) {
+      return `${systemPath} (system)`;
+    }
+  } catch {
+    // Ignore errors, will return "not available"
+  }
+
+  return "not available";
+}
 
 export async function handleInitialize(
   params: InitializeToolplexParams,
@@ -36,6 +71,10 @@ export async function handleInitialize(
         : platform.charAt(0).toUpperCase() + platform.slice(1);
 
   const paths = envPaths("ToolPlex", { suffix: "" });
+
+  // Get bundled dependency information
+  const bundledDeps = Registry.getBundledDependencies();
+
   const systemInfo = {
     os: `${osName} ${os.release()}`,
     arch: os.arch(),
@@ -48,6 +87,15 @@ export async function handleInitialize(
       month: "long",
       day: "numeric",
     }),
+    // Resolve dependency paths with bundled > system > not available priority
+    nodePath: resolveDependencyForInit(bundledDeps.node, "node"),
+    pythonPath: resolveDependencyForInit(
+      bundledDeps.python,
+      platform === "win32" ? "python" : "python3",
+    ),
+    gitPath: resolveDependencyForInit(bundledDeps.git, "git"),
+    uvxPath: resolveDependencyForInit(bundledDeps.uvx, "uvx"),
+    npxPath: resolveDependencyForInit(bundledDeps.npx, "npx"),
   };
 
   await logger.debug("Initializing server managers and API service");
@@ -101,7 +149,12 @@ export async function handleInitialize(
           .replace("{ARGS.memory}", systemInfo.memory)
           .replace("{ARGS.cpuCores}", systemInfo.cpuCores.toString())
           .replace("{ARGS.workDir}", systemInfo.workDir)
-          .replace("{ARGS.date}", systemInfo.date),
+          .replace("{ARGS.date}", systemInfo.date)
+          .replace("{ARGS.nodePath}", systemInfo.nodePath)
+          .replace("{ARGS.pythonPath}", systemInfo.pythonPath)
+          .replace("{ARGS.gitPath}", systemInfo.gitPath)
+          .replace("{ARGS.uvxPath}", systemInfo.uvxPath)
+          .replace("{ARGS.npxPath}", systemInfo.npxPath),
       },
     ],
   };

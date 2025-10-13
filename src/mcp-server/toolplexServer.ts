@@ -60,6 +60,15 @@ export async function serve(config: ToolplexServerConfig): Promise<void> {
   clientContext.clientVersion = clientVersion;
 
   await Registry.init(clientContext);
+
+  // Store bundled dependencies in Registry for use throughout the application
+  if (config.bundledDependencies) {
+    Registry.setBundledDependencies(config.bundledDependencies);
+    await logger.debug(
+      `Bundled dependencies registered: ${JSON.stringify(config.bundledDependencies)}`,
+    );
+  }
+
   await logger.info(
     `Starting Toolplex server in ${config.dev ? "development" : "production"} mode`,
   );

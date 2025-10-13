@@ -7,7 +7,6 @@ import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import * as fs from "fs/promises";
 import * as path from "path";
-import which from "which";
 import { ServerConfig } from "../shared/mcpServerTypes.js";
 import { FileLogger } from "../shared/fileLogger.js";
 import envPaths from "env-paths";
@@ -271,17 +270,13 @@ export class ServerManager {
       if (!config.command)
         throw new Error("Command is required for stdio transport");
 
+      // Use RuntimeCheck to resolve the command, which prioritizes bundled dependencies
+      const { RuntimeCheck } = await import(
+        "../mcp-server/utils/runtimeCheck.js"
+      );
+      const resolvedCommand = RuntimeCheck.resolveDependency(config.command);
+
       const enhancedPath = getEnhancedPath();
-      let resolvedCommand = which.sync(config.command, {
-        path: enhancedPath,
-        nothrow: true,
-      });
-
-      if (!resolvedCommand) {
-        // Fallback to supplied command
-        resolvedCommand = config.command;
-      }
-
       const serverParams: StdioServerParameters = {
         command: resolvedCommand,
         args: config.args || [],

@@ -4,12 +4,25 @@ import { z } from "zod";
 export type ClientMode = "standard" | "restricted";
 export type LogLevel = "error" | "warn" | "info" | "debug";
 
+/**
+ * Paths to bundled dependencies provided by the host application (e.g., Electron).
+ * These dependencies are required for MCP server installations and execution.
+ */
+export interface BundledDependencies {
+  node?: string; // Path to Node.js executable
+  python?: string; // Path to Python executable (python3)
+  git?: string; // Path to Git executable
+  uvx?: string; // Path to uvx executable (optional, may come with Python)
+  npx?: string; // Path to npx executable (optional, typically comes with Node)
+}
+
 export interface ToolplexServerConfig {
   dev: boolean;
   apiKey: string;
   clientMode: ClientMode;
   clientName: string;
   logLevel: LogLevel;
+  bundledDependencies?: BundledDependencies;
 }
 
 // --------------------

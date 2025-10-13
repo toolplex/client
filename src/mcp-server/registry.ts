@@ -6,6 +6,7 @@ import { PromptsCache } from "./promptsCache.js";
 import { ToolDefinitionsCache } from "./toolDefinitionsCache.js";
 import { ServersCache } from "./serversCache.js";
 import { PolicyEnforcer } from "./policy/policyEnforcer.js";
+import { BundledDependencies } from "../shared/mcpServerTypes.js";
 
 /**
  * In-memory global registry for the ToolPlex client.
@@ -23,6 +24,7 @@ class Registry {
   private static _toolDefinitionsCache: ToolDefinitionsCache | null = null;
   private static _serversCache: ServersCache | null = null;
   private static _policyEnforcer: PolicyEnforcer | null = null;
+  private static _bundledDependencies: BundledDependencies = {};
 
   public static async init(clientContext: ClientContext): Promise<void> {
     if (
@@ -116,6 +118,32 @@ class Registry {
     return this._policyEnforcer;
   }
 
+  /**
+   * Set bundled dependencies (paths to Node, Python, Git, etc.)
+   * provided by the host application (e.g., Electron desktop app).
+   */
+  public static setBundledDependencies(deps: BundledDependencies): void {
+    this._bundledDependencies = deps;
+  }
+
+  /**
+   * Get bundled dependencies (paths to required executables).
+   * Returns empty object if not set.
+   */
+  public static getBundledDependencies(): BundledDependencies {
+    return this._bundledDependencies;
+  }
+
+  /**
+   * Get the path for a specific bundled dependency by name.
+   * Returns undefined if the dependency is not available.
+   */
+  public static getBundledDependencyPath(
+    depName: "node" | "python" | "git" | "uvx" | "npx",
+  ): string | undefined {
+    return this._bundledDependencies[depName];
+  }
+
   public static reset(): void {
     this._clientContext = null;
     this._toolplexApiService = null;
@@ -134,6 +162,7 @@ class Registry {
       this._serversCache = null;
     }
     this._policyEnforcer = null;
+    this._bundledDependencies = {};
   }
 }
 
