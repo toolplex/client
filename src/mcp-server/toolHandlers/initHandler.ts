@@ -91,13 +91,18 @@ export async function handleInitialize(
     }),
     // Resolve dependency paths with bundled > system > not available priority
     nodePath: resolveDependencyForInit(bundledDeps.node, "node"),
+    npxPath: resolveDependencyForInit(bundledDeps.npx, "npx"),
     pythonPath: resolveDependencyForInit(
       bundledDeps.python,
       platform === "win32" ? "python" : "python3",
     ),
-    gitPath: resolveDependencyForInit(bundledDeps.git, "git"),
+    pipPath: resolveDependencyForInit(
+      bundledDeps.pip,
+      platform === "win32" ? "pip" : "pip3",
+    ),
+    uvPath: resolveDependencyForInit(bundledDeps.uv, "uv"),
     uvxPath: resolveDependencyForInit(bundledDeps.uvx, "uvx"),
-    npxPath: resolveDependencyForInit(bundledDeps.npx, "npx"),
+    gitPath: resolveDependencyForInit(bundledDeps.git, "git"),
   };
 
   await logger.debug("Initializing server managers and API service");
@@ -153,10 +158,12 @@ export async function handleInitialize(
           .replace("{ARGS.workDir}", systemInfo.workDir)
           .replace("{ARGS.date}", systemInfo.date)
           .replace("{ARGS.nodePath}", systemInfo.nodePath)
+          .replace("{ARGS.npxPath}", systemInfo.npxPath)
           .replace("{ARGS.pythonPath}", systemInfo.pythonPath)
-          .replace("{ARGS.gitPath}", systemInfo.gitPath)
+          .replace("{ARGS.pipPath}", systemInfo.pipPath)
+          .replace("{ARGS.uvPath}", systemInfo.uvPath)
           .replace("{ARGS.uvxPath}", systemInfo.uvxPath)
-          .replace("{ARGS.npxPath}", systemInfo.npxPath),
+          .replace("{ARGS.gitPath}", systemInfo.gitPath),
       },
     ],
   };

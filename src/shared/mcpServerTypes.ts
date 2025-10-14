@@ -10,10 +10,12 @@ export type LogLevel = "error" | "warn" | "info" | "debug";
  */
 export interface BundledDependencies {
   node?: string; // Path to Node.js executable
+  npx?: string; // Path to npx executable (typically comes with Node)
   python?: string; // Path to Python executable (python3)
+  pip?: string; // Path to pip executable (pip3)
+  uv?: string; // Path to uv executable (Python package manager)
+  uvx?: string; // Path to uvx executable (Python package runner)
   git?: string; // Path to Git executable
-  uvx?: string; // Path to uvx executable (optional, may come with Python)
-  npx?: string; // Path to npx executable (optional, typically comes with Node)
 }
 
 export interface ToolplexServerConfig {

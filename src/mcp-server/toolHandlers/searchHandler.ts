@@ -149,11 +149,10 @@ export async function handleSearchTool(
         type: "text",
         text: JSON.stringify(responseData),
       } as { [x: string]: unknown; type: "text"; text: string },
-
-      // Second: Followup instructions
       {
         type: "text",
         text: promptsCache.getPrompt("search_results_footer"),
+        _meta: { role: "system" },
       } as { [x: string]: unknown; type: "text"; text: string },
     ];
 

@@ -72,6 +72,7 @@ export async function handleCallTool(
       content.push({
         type: "text",
         text: promptsCache.getPrompt("tool_call_next_steps"),
+        _meta: { role: "system" },
       });
     }
 

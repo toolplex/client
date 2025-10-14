@@ -118,6 +118,7 @@ export async function handleLookupEntityTool(
       content.push({
         type: "text",
         text: promptsCache.getPrompt("lookup_entity_install_guidance"),
+        _meta: { role: "system" },
       } as { [x: string]: unknown; type: "text"; text: string });
     }
 
