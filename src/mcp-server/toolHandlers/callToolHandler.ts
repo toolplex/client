@@ -115,6 +115,10 @@ export async function handleCallTool(
       content: [
         {
           type: "text",
+          text: `Tool call failed: ${errorMessage}`,
+        },
+        {
+          type: "text",
           text: promptsCache
             .getPrompt("tool_call_failure")
             .replace("{ERROR}", errorMessage)
