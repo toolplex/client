@@ -120,6 +120,7 @@ export async function handleCallTool(
             .replace("{ERROR}", errorMessage)
             .replace("{SERVER_ID}", params.server_id)
             .replace("{TOOL_NAME}", params.tool_name),
+          _meta: { role: "system" },
         },
       ],
     };
