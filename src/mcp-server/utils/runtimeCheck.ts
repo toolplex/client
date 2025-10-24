@@ -113,6 +113,17 @@ export class RuntimeCheck {
   }
 
   static extractCommandName(command: string): string {
-    return command.trim().split(/\s+/)[0];
+    const trimmed = command.trim();
+
+    // For absolute paths (starting with / or drive letter like C:\),
+    // the entire path is the command - don't split on spaces
+    // This handles paths like "/Users/name/Library/Application Support/tool"
+    if (trimmed.startsWith("/") || /^[A-Za-z]:[\\/]/.test(trimmed)) {
+      return trimmed;
+    }
+
+    // For relative commands (like "npx", "node --version"),
+    // split on whitespace to extract just the command name
+    return trimmed.split(/\s+/)[0];
   }
 }

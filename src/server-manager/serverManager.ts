@@ -274,7 +274,9 @@ export class ServerManager {
       const { RuntimeCheck } = await import(
         "../mcp-server/utils/runtimeCheck.js"
       );
-      const resolvedCommand = RuntimeCheck.resolveDependency(config.command);
+      // Extract command name first (handles paths with spaces correctly)
+      const commandName = RuntimeCheck.extractCommandName(config.command);
+      const resolvedCommand = RuntimeCheck.resolveDependency(commandName);
 
       const enhancedPath = getEnhancedPath();
       const serverParams: StdioServerParameters = {
