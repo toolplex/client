@@ -294,6 +294,7 @@ export async function serve(config: ToolplexServerConfig): Promise<void> {
       }
       await logger.error(`Error calling ToolPlex: ${errorMessage}`);
       result = {
+        isError: true,
         role: "system",
         content: [
           {
