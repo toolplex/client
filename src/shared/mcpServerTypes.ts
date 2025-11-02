@@ -200,6 +200,9 @@ export const SavePlaybookParamsSchema = z.object({
   privacy: z.enum(["public", "private"]).optional(),
   source_playbook_id: z.string().optional(),
   fork_reason: z.string().optional(),
+  // Internal parameter for validation-only mode (not exposed to agent in tool definition)
+  // Use coerce to handle both boolean and string "true"/"false" from different LLM clients
+  validate_only: z.coerce.boolean().optional(),
 });
 
 export type SavePlaybookParams = z.infer<typeof SavePlaybookParamsSchema>;

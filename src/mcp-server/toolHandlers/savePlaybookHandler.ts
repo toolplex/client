@@ -9,7 +9,11 @@ export async function handleSavePlaybook(
   params: SavePlaybookParams,
 ): Promise<CallToolResult> {
   const startTime = Date.now();
-  await logger.info("Handling save playbook request");
+  const isValidationOnly = params.validate_only === true;
+
+  await logger.info(
+    `Handling save playbook request${isValidationOnly ? " (validation only)" : ""}`,
+  );
   await logger.debug(`Playbook params: ${JSON.stringify(params)}`);
 
   const apiService = Registry.getToolplexApiService();
@@ -29,8 +33,21 @@ export async function handleSavePlaybook(
       throw new Error("Saving playbooks is disabled in read-only mode");
     }
 
-    // Enforce playbook policy before saving
+    // Enforce playbook policy before saving (runs in both validation and actual save)
     policyEnforcer.enforceSavePlaybookPolicy(params);
+
+    // If validation-only mode, return success without saving or logging telemetry
+    if (isValidationOnly) {
+      await logger.info("Playbook validation passed");
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({ validation: "passed" }),
+          },
+        ],
+      };
+    }
 
     const {
       playbook_name,
@@ -58,14 +75,17 @@ export async function handleSavePlaybook(
 
     await logger.info(`Playbook created successfully with ID: ${response.id}`);
 
-    await telemetryLogger.log("client_save_playbook", {
-      success: true,
-      log_context: {
-        playbook_id: response.id,
-        source_playbook_id: source_playbook_id,
-      },
-      latency_ms: Date.now() - startTime,
-    });
+    // Only log telemetry for actual saves (not validation-only calls)
+    if (!isValidationOnly) {
+      await telemetryLogger.log("client_save_playbook", {
+        success: true,
+        log_context: {
+          playbook_id: response.id,
+          source_playbook_id: source_playbook_id,
+        },
+        latency_ms: Date.now() - startTime,
+      });
+    }
 
     return {
       content: [
@@ -79,13 +99,18 @@ export async function handleSavePlaybook(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    await logger.error(`Failed to create playbook: ${errorMessage}`);
+    await logger.error(
+      `Failed to ${isValidationOnly ? "validate" : "create"} playbook: ${errorMessage}`,
+    );
 
-    await telemetryLogger.log("client_save_playbook", {
-      success: false,
-      pii_sanitized_error_message: errorMessage,
-      latency_ms: Date.now() - startTime,
-    });
+    // Only log telemetry for actual saves (not validation-only calls)
+    if (!isValidationOnly) {
+      await telemetryLogger.log("client_save_playbook", {
+        success: false,
+        pii_sanitized_error_message: errorMessage,
+        latency_ms: Date.now() - startTime,
+      });
+    }
 
     return {
       isError: true,
