@@ -165,8 +165,30 @@ export async function handleInstallServer(
     // Validate server ID format
     validateServerIdOrThrow(server_id);
 
-    // Validate command is installed before proceeding
-    if (config.command) {
+    // Validate stdio transport configuration early to avoid timeouts
+    if (config.transport === "stdio") {
+      // Validate that command is provided
+      if (!config.command) {
+        throw new Error("Command is required for stdio transport");
+      }
+
+      // Validate command is installed
+      await RuntimeCheck.validateCommandOrThrow(config.command);
+
+      // Check that args is provided and not empty for package managers
+      // Package managers like npx, uvx, pnpm dlx, etc. require a package name as first arg
+      const command = config.command.toLowerCase();
+      const requiresPackageName = ["npx", "uvx", "pnpm", "yarn"].some((pm) =>
+        command.includes(pm),
+      );
+
+      if (requiresPackageName && (!config.args || config.args.length === 0)) {
+        throw new Error(
+          `Package manager command '${config.command}' requires args to specify package name. Received args: ${config.args ? "[]" : "undefined"}`,
+        );
+      }
+    } else if (config.command) {
+      // For non-stdio transports, still validate command if provided
       await RuntimeCheck.validateCommandOrThrow(config.command);
     }
 
