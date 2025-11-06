@@ -28,6 +28,9 @@ export class ServerManager {
   // Add a file lock mechanism to prevent concurrent writes
   private configLock: Promise<void> = Promise.resolve();
 
+  // Maximum number of stderr lines to capture during installation
+  private static readonly MAX_STDERR_LINES = 50;
+
   constructor() {
     this.sessions = new Map();
     this.tools = new Map();
@@ -171,18 +174,72 @@ export class ServerManager {
     return this.serverNames.get(serverId) || serverId;
   }
 
+  /**
+   * Helper to attach stderr listener as soon as transport starts
+   */
+  private async attachStderrListener(
+    transport: StdioClientTransport,
+    serverId: string,
+    stderrBuffer: string[],
+    maxLines: number,
+  ): Promise<void> {
+    // Poll for stderr availability (it becomes available after transport.start())
+    const maxAttempts = 100; // 1 second total
+    const pollInterval = 10; // 10ms between checks
+
+    for (let i = 0; i < maxAttempts; i++) {
+      if (transport.stderr) {
+        transport.stderr.on("data", (chunk: Buffer) => {
+          const lines = chunk
+            .toString()
+            .split("\n")
+            .filter((l) => l.trim());
+          stderrBuffer.push(...lines);
+          // Keep only the last maxLines to prevent memory issues
+          if (stderrBuffer.length > maxLines) {
+            stderrBuffer.splice(0, stderrBuffer.length - maxLines);
+          }
+          // Also log stderr in real-time for debugging
+          lines.forEach((line) => {
+            logger.debug(`[${serverId} stderr] ${line}`);
+          });
+        });
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+    }
+    // If stderr never became available, that's okay (might be SSE transport)
+  }
+
   async connectWithHandshakeTimeout(
     client: Client,
     transport: SSEClientTransport | StdioClientTransport,
     ms = 60000,
+    stderrBuffer?: string[],
+    serverId?: string,
   ): Promise<{ tools?: Tool[] }> {
     let connectTimeout: NodeJS.Timeout;
     let listToolsTimeout: NodeJS.Timeout;
 
     try {
+      // Start stderr monitoring in parallel for stdio transports
+      const stderrMonitoring =
+        transport instanceof StdioClientTransport && stderrBuffer && serverId
+          ? this.attachStderrListener(
+              transport,
+              serverId,
+              stderrBuffer,
+              ServerManager.MAX_STDERR_LINES,
+            )
+          : Promise.resolve();
+
       // Race connect() with timeout
       await Promise.race([
-        client.connect(transport),
+        (async () => {
+          await client.connect(transport);
+          // Ensure stderr listener is attached after connection starts
+          await stderrMonitoring;
+        })(),
         new Promise<never>((_, reject) => {
           connectTimeout = setTimeout(
             () => reject(new Error(`connect() timed out in ${ms} ms`)),
@@ -263,6 +320,8 @@ export class ServerManager {
     }
 
     let transport;
+    const stderrBuffer: string[] = [];
+
     if (config.transport === "sse") {
       if (!config.url) throw new Error("URL is required for SSE transport");
       transport = new SSEClientTransport(new URL(config.url));
@@ -304,6 +363,8 @@ export class ServerManager {
         client,
         transport,
         60000,
+        stderrBuffer,
+        serverId,
       );
       const tools = toolsResponse.tools || [];
 
@@ -345,7 +406,21 @@ export class ServerManager {
         }
       }
 
-      throw err;
+      // Enhance error message with stderr output if available
+      const baseError = err instanceof Error ? err.message : String(err);
+      let enhancedError = baseError;
+
+      if (stderrBuffer.length > 0) {
+        const stderrPreview = stderrBuffer.join("\n");
+        enhancedError = `${baseError}\n\nServer stderr output:\n${stderrPreview}`;
+        await logger.error(
+          `Installation failed for ${serverId}. Error: ${baseError}. Stderr: ${stderrPreview}`,
+        );
+      } else {
+        await logger.error(`Installation failed for ${serverId}: ${baseError}`);
+      }
+
+      throw new Error(enhancedError);
     }
   }
 
