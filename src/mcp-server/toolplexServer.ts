@@ -69,6 +69,9 @@ export async function serve(config: ToolplexServerConfig): Promise<void> {
     );
   }
 
+  // Store server config in Registry (includes session resume history)
+  Registry.setServerConfig(config);
+
   await logger.info(
     `Starting Toolplex server in ${config.dev ? "development" : "production"} mode`,
   );

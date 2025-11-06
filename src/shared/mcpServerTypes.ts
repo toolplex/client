@@ -25,6 +25,11 @@ export interface ToolplexServerConfig {
   clientName: string;
   logLevel: LogLevel;
   bundledDependencies?: BundledDependencies;
+  sessionResumeHistory?: {
+    tool_calls: Array<{ server_id: string; tool_name: string }>;
+    installs: Array<{ server_id: string }>;
+    uninstalls: Array<{ server_id: string }>;
+  };
 }
 
 // --------------------

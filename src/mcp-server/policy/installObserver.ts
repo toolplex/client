@@ -16,6 +16,19 @@ class InstallObserver {
     this.recordAction(serverId, "uninstall");
   }
 
+  // Seed the observer with historical install/uninstall actions (for session resume)
+  public seedHistory(
+    installs: Array<{ server_id: string }>,
+    uninstalls: Array<{ server_id: string }>,
+  ): void {
+    installs.forEach(({ server_id }) => {
+      this.recordInstall(server_id);
+    });
+    uninstalls.forEach(({ server_id }) => {
+      this.recordUninstall(server_id);
+    });
+  }
+
   // Check if a server has been installed
   public wasServerInstalled(serverId: string): boolean {
     return (

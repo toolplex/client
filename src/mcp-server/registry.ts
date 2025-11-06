@@ -6,7 +6,10 @@ import { PromptsCache } from "./promptsCache.js";
 import { ToolDefinitionsCache } from "./toolDefinitionsCache.js";
 import { ServersCache } from "./serversCache.js";
 import { PolicyEnforcer } from "./policy/policyEnforcer.js";
-import { BundledDependencies } from "../shared/mcpServerTypes.js";
+import {
+  BundledDependencies,
+  ToolplexServerConfig,
+} from "../shared/mcpServerTypes.js";
 
 /**
  * In-memory global registry for the ToolPlex client.
@@ -25,6 +28,7 @@ class Registry {
   private static _serversCache: ServersCache | null = null;
   private static _policyEnforcer: PolicyEnforcer | null = null;
   private static _bundledDependencies: BundledDependencies = {};
+  private static _serverConfig: ToolplexServerConfig | null = null;
 
   public static async init(clientContext: ClientContext): Promise<void> {
     if (
@@ -144,6 +148,23 @@ class Registry {
     return this._bundledDependencies[depName];
   }
 
+  /**
+   * Set the server configuration (includes session resume history).
+   */
+  public static setServerConfig(config: ToolplexServerConfig): void {
+    this._serverConfig = config;
+  }
+
+  /**
+   * Get the server configuration.
+   */
+  public static getServerConfig(): ToolplexServerConfig {
+    if (!this._serverConfig) {
+      throw new Error("ServerConfig not set in Registry");
+    }
+    return this._serverConfig;
+  }
+
   public static reset(): void {
     this._clientContext = null;
     this._toolplexApiService = null;
@@ -163,6 +184,7 @@ class Registry {
     }
     this._policyEnforcer = null;
     this._bundledDependencies = {};
+    this._serverConfig = null;
   }
 }
 

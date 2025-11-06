@@ -31,6 +31,34 @@ const bundledDependencies: BundledDependencies = {
   git: process.env.TOOLPLEX_GIT_PATH,
 };
 
+// Parse session resume history for restored chat sessions
+// This allows the enforcement layer to validate save_playbook and submit_feedback
+// based on historical tool usage from the database
+let sessionResumeHistory:
+  | {
+      tool_calls: Array<{ server_id: string; tool_name: string }>;
+      installs: Array<{ server_id: string }>;
+      uninstalls: Array<{ server_id: string }>;
+    }
+  | undefined;
+
+if (process.env.TOOLPLEX_SESSION_RESUME_HISTORY) {
+  try {
+    sessionResumeHistory = JSON.parse(
+      process.env.TOOLPLEX_SESSION_RESUME_HISTORY,
+    );
+
+    FileLogger.info(
+      `Parsed session resume history - ` +
+        `${sessionResumeHistory?.tool_calls.length || 0} tool calls, ` +
+        `${sessionResumeHistory?.installs.length || 0} installs, ` +
+        `${sessionResumeHistory?.uninstalls.length || 0} uninstalls`,
+    );
+  } catch (error) {
+    FileLogger.warn(`Failed to parse session resume history: ${error}`);
+  }
+}
+
 if (!apiKey) {
   process.exit(1);
 }
@@ -42,6 +70,7 @@ const config: ToolplexServerConfig = {
   clientName,
   logLevel,
   bundledDependencies,
+  sessionResumeHistory,
 };
 
 serve(config).catch(() => {

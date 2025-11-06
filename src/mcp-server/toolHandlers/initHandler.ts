@@ -133,6 +133,28 @@ export async function handleInitialize(
   // Init PolicyEnforce after setting permissions and flags
   policyEnforcer.init(clientContext);
 
+  // Seed enforcement history if provided (for restored sessions)
+  const serverConfig = Registry.getServerConfig();
+  if (serverConfig.sessionResumeHistory) {
+    const { tool_calls, installs, uninstalls } =
+      serverConfig.sessionResumeHistory;
+
+    await logger.info(
+      `Seeding enforcement history from restored session - ` +
+        `${tool_calls.length} tool calls, ${installs.length} installs, ${uninstalls.length} uninstalls`,
+    );
+
+    const callToolObserver = policyEnforcer.getCallToolObserver();
+    callToolObserver.seedHistory(tool_calls);
+
+    const installObserver = policyEnforcer.getInstallObserver();
+    installObserver.seedHistory(installs, uninstalls);
+
+    await logger.info("Enforcement history seeded successfully");
+  } else {
+    await logger.debug("No session resume history provided (new session)");
+  }
+
   const allSucceeded = serverManagerInitResults.succeeded;
   const allFailures = serverManagerInitResults.failures;
 

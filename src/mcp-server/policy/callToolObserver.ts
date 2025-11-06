@@ -14,6 +14,15 @@ class CallToolObserver {
     this.serverToolCalls.get(serverId)!.add(toolName);
   }
 
+  // Seed the observer with historical tool calls (for session resume)
+  public seedHistory(
+    history: Array<{ server_id: string; tool_name: string }>,
+  ): void {
+    history.forEach(({ server_id, tool_name }) => {
+      this.recordCall(server_id, tool_name);
+    });
+  }
+
   // Check if a server was called at all
   public wasServerCalled(serverId: string): boolean {
     return (
