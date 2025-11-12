@@ -98,18 +98,23 @@ async function installServer(
   description: string,
   serverManagerClient: StdioServerManagerClient,
   serverConfig: ServerConfig,
+  timeoutMs?: number,
 ): Promise<ServerInstallResult> {
   await logger.info(`Starting installation of tool ${serverId}: ${serverName}`);
   await logger.debug(
     `Server config: ${JSON.stringify(serverConfig)}, Server ID: ${serverId}`,
   );
 
-  const response = await serverManagerClient.sendRequest("install", {
-    server_id: serverId,
-    server_name: serverName,
-    description: description,
-    config: serverConfig,
-  });
+  const response = await serverManagerClient.sendRequest(
+    "install",
+    {
+      server_id: serverId,
+      server_name: serverName,
+      description: description,
+      config: serverConfig,
+    },
+    timeoutMs,
+  );
 
   if ("error" in response) {
     const error = `Server installation failed: ${response.error.message}`;
@@ -212,6 +217,7 @@ export async function handleInstallServer(
       description,
       client,
       config,
+      params.timeout_ms,
     );
 
     // After successful install, refresh the servers cache

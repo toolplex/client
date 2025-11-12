@@ -72,8 +72,13 @@ export class StdioServerManagerClient {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async sendRequest(method: string, params: any): Promise<any> {
+  async sendRequest(
+    method: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    params: any,
+    timeoutMs = 60000,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       const id = Date.now();
       if (!this.serverProcess?.stdin) {
@@ -103,7 +108,7 @@ export class StdioServerManagerClient {
           this.messageHandlers.delete(id);
           reject(new Error(`Request timed out: ${method}`));
         }
-      }, 60000);
+      }, timeoutMs);
     });
   }
 

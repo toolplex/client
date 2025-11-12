@@ -113,6 +113,7 @@ export const InstallParamsSchema = z.object({
   server_name: z.string(),
   description: z.string(),
   config: ServerConfigSchema,
+  timeout_ms: z.number().int().min(10000).max(300000).optional(),
 });
 
 export type InstallParams = z.infer<typeof InstallParamsSchema>;
