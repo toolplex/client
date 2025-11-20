@@ -145,6 +145,7 @@ export class ToolplexApiService {
   public async lookupEntity(
     entityType: "server" | "playbook" | "feedback",
     entityId: string,
+    includeReadme?: boolean,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
     try {
@@ -154,6 +155,7 @@ export class ToolplexApiService {
         body: JSON.stringify({
           entity_type: entityType,
           entity_id: entityId,
+          include_readme: includeReadme,
         }),
       });
 

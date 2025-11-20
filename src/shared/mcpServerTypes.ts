@@ -101,6 +101,7 @@ export type SearchParams = z.infer<typeof SearchParamsSchema>;
 export const LookupEntityParamsSchema = z.object({
   entity_type: z.enum(["server", "playbook", "feedback"]),
   entity_id: z.string(),
+  include_readme: z.boolean().optional(),
 });
 
 export type LookupEntityParams = z.infer<typeof LookupEntityParamsSchema>;

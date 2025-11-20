@@ -36,6 +36,7 @@ export async function handleLookupEntityTool(
     const lookupResponse = await apiService.lookupEntity(
       params.entity_type,
       params.entity_id,
+      params.include_readme,
     );
 
     // Annotate installed server using resultAnnotators
