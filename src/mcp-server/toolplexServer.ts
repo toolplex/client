@@ -90,12 +90,45 @@ export async function serve(config: ToolplexServerConfig): Promise<void> {
   );
 
   // Initialize server manager clients
+  // Use bundled node if available, otherwise fall back to system "node"
+  // Pass bundled dependency paths so the server-manager can initialize its Registry
   await logger.info("Initializing server manager clients");
+  const nodeCommand = config.bundledDependencies?.node || "node";
   const serverManagerClients: Record<string, StdioServerManagerClient> = {
     node: new StdioServerManagerClient(
-      "node",
+      nodeCommand,
       [path.join(__dirname, "..", "server-manager", "index.js")],
-      { LOG_LEVEL: config.logLevel },
+      {
+        LOG_LEVEL: config.logLevel,
+        // Pass the current PATH which includes bundled bin directories
+        PATH: process.env.PATH,
+        // Pass all bundled dependency paths to server-manager
+        // These are critical for proper command resolution (e.g., npx -> node + npx-cli.js)
+        ...(config.bundledDependencies?.node && {
+          TOOLPLEX_NODE_PATH: config.bundledDependencies.node,
+        }),
+        ...(config.bundledDependencies?.npm && {
+          TOOLPLEX_NPM_PATH: config.bundledDependencies.npm,
+        }),
+        ...(config.bundledDependencies?.npx && {
+          TOOLPLEX_NPX_PATH: config.bundledDependencies.npx,
+        }),
+        ...(config.bundledDependencies?.python && {
+          TOOLPLEX_PYTHON_PATH: config.bundledDependencies.python,
+        }),
+        ...(config.bundledDependencies?.pip && {
+          TOOLPLEX_PIP_PATH: config.bundledDependencies.pip,
+        }),
+        ...(config.bundledDependencies?.uv && {
+          TOOLPLEX_UV_PATH: config.bundledDependencies.uv,
+        }),
+        ...(config.bundledDependencies?.uvx && {
+          TOOLPLEX_UVX_PATH: config.bundledDependencies.uvx,
+        }),
+        ...(config.bundledDependencies?.git && {
+          TOOLPLEX_GIT_PATH: config.bundledDependencies.git,
+        }),
+      },
     ),
   };
 

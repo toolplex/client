@@ -11,6 +11,7 @@ const INSTALL_HINTS: Record<string, string> = {
   python3:
     "Install Python: https://www.python.org/downloads/. Or check if you have `python` installed.",
   node: "Install Node.js: https://nodejs.org/en/download/",
+  npm: "Install npm (comes with Node.js): https://nodejs.org/en/download/",
   npx: "Install npx (comes with Node.js): https://nodejs.org/en/download/",
   git: "Install Git: https://git-scm.com/downloads",
 };
@@ -18,6 +19,7 @@ const INSTALL_HINTS: Record<string, string> = {
 // Commands that should use bundled dependencies (required)
 const BUNDLED_DEPENDENCY_COMMANDS = [
   "node",
+  "npm",
   "python",
   "python3",
   "git",
@@ -25,43 +27,62 @@ const BUNDLED_DEPENDENCY_COMMANDS = [
   "uvx",
 ];
 
+/**
+ * Result of resolving a command, which may need to be invoked via node
+ * if it's a .js script (e.g., bundled npm/npx on Unix).
+ */
+export interface ResolvedCommand {
+  command: string;
+  prependArgs: string[]; // Args to prepend (e.g., the .js script path when using node)
+}
+
 export class RuntimeCheck {
   /**
-   * Resolve a dependency path with priority order:
-   * 1. Bundled dependencies (if provided by host application like ToolPlex Desktop)
-   * 2. System PATH (fallback for standalone @client usage)
-   * 3. Error if neither available
+   * Resolve a dependency and return both the command and any prepended args needed.
+   * This handles the case where bundled npm/npx on Unix are .js scripts that
+   * need to be invoked via node.
    *
-   * This allows ToolPlex Desktop to provide reliable bundled dependencies while
-   * still supporting standalone users who have system dependencies installed.
-   *
-   * @param commandName - The command to resolve
-   * @returns The full path to the command executable
-   * @throws Error if the command is not available in bundled deps or system PATH
+   * @param commandName - The command to resolve (e.g., "npx", "node", "uvx")
+   * @returns ResolvedCommand with command and prependArgs
+   * @throws Error if the command is not available
    */
-  static resolveDependency(commandName: string): string {
-    // Check if this is a known bundled dependency type
+  static resolveCommandWithArgs(commandName: string): ResolvedCommand {
     const isBundledDep = BUNDLED_DEPENDENCY_COMMANDS.includes(commandName);
 
     if (isBundledDep) {
-      // Priority 1: Try bundled dependency first (preferred for ToolPlex Desktop)
+      // Priority 1: Try bundled dependency first
       const bundledPath = Registry.getBundledDependencyPath(
-        commandName as "node" | "python" | "git" | "uvx" | "npx",
+        commandName as "node" | "npm" | "python" | "git" | "uvx" | "npx",
       );
 
       if (bundledPath && fs.existsSync(bundledPath)) {
-        return bundledPath;
+        // Check if this is a .js file that needs to be invoked via node
+        if (bundledPath.endsWith(".js")) {
+          const nodePath = Registry.getBundledDependencyPath("node");
+          if (nodePath && fs.existsSync(nodePath)) {
+            return {
+              command: nodePath,
+              prependArgs: [bundledPath],
+            };
+          }
+          // Fallback to system node if bundled node not available
+          return {
+            command: "node",
+            prependArgs: [bundledPath],
+          };
+        }
+        return { command: bundledPath, prependArgs: [] };
       }
 
-      // Handle python3 -> python mapping for bundled deps
+      // Handle python3 -> python mapping
       if (commandName === "python3") {
         const pythonPath = Registry.getBundledDependencyPath("python");
         if (pythonPath && fs.existsSync(pythonPath)) {
-          return pythonPath;
+          return { command: pythonPath, prependArgs: [] };
         }
       }
 
-      // Priority 2: Fall back to system PATH (for standalone @client usage)
+      // Priority 2: Fall back to system PATH
       const enhancedPath = getEnhancedPath();
       const resolved = which.sync(commandName, {
         path: enhancedPath,
@@ -69,10 +90,10 @@ export class RuntimeCheck {
       });
 
       if (resolved) {
-        return resolved;
+        return { command: resolved, prependArgs: [] };
       }
 
-      // Priority 3: Neither bundled nor system available - error
+      // Priority 3: Error
       const hint = INSTALL_HINTS[commandName];
       throw new Error(
         `Missing required command: '${commandName}'.\n` +
@@ -100,7 +121,29 @@ export class RuntimeCheck {
       );
     }
 
-    return resolved;
+    return { command: resolved, prependArgs: [] };
+  }
+
+  /**
+   * Resolve a dependency path with priority order:
+   * 1. Bundled dependencies (if provided by host application like ToolPlex Desktop)
+   * 2. System PATH (fallback for standalone @client usage)
+   * 3. Error if neither available
+   *
+   * NOTE: This returns just the path. For npm/npx which may be .js files on Unix,
+   * use resolveCommandWithArgs() instead to get the proper invocation.
+   *
+   * @param commandName - The command to resolve
+   * @returns The full path to the command executable
+   * @throws Error if the command is not available in bundled deps or system PATH
+   */
+  static resolveDependency(commandName: string): string {
+    const resolved = this.resolveCommandWithArgs(commandName);
+    // If there are prepend args, the first one is the actual script path
+    if (resolved.prependArgs.length > 0) {
+      return resolved.prependArgs[0];
+    }
+    return resolved.command;
   }
 
   /**

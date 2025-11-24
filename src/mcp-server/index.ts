@@ -23,6 +23,7 @@ const logLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) || "info";
 // These are provided by the host application (e.g., Electron desktop)
 const bundledDependencies: BundledDependencies = {
   node: process.env.TOOLPLEX_NODE_PATH,
+  npm: process.env.TOOLPLEX_NPM_PATH,
   npx: process.env.TOOLPLEX_NPX_PATH,
   python: process.env.TOOLPLEX_PYTHON_PATH,
   pip: process.env.TOOLPLEX_PIP_PATH,

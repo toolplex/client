@@ -7,10 +7,15 @@ export type LogLevel = "error" | "warn" | "info" | "debug";
 /**
  * Paths to bundled dependencies provided by the host application (e.g., Electron).
  * These dependencies are required for MCP server installations and execution.
+ *
+ * NOTE: On Unix systems, npm/npx paths point to the actual CLI .js files
+ * (e.g., lib/node_modules/npm/bin/npx-cli.js) because electron-builder dereferences
+ * symlinks during packaging. These must be invoked via `node <script>`.
  */
 export interface BundledDependencies {
   node?: string; // Path to Node.js executable
-  npx?: string; // Path to npx executable (typically comes with Node)
+  npm?: string; // Path to npm CLI script (invoke via node)
+  npx?: string; // Path to npx CLI script (invoke via node)
   python?: string; // Path to Python executable (python3)
   pip?: string; // Path to pip executable (pip3)
   uv?: string; // Path to uv executable (Python package manager)

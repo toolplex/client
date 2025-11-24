@@ -143,7 +143,7 @@ class Registry {
    * Returns undefined if the dependency is not available.
    */
   public static getBundledDependencyPath(
-    depName: "node" | "python" | "git" | "uvx" | "npx",
+    depName: "node" | "npm" | "python" | "git" | "uvx" | "npx",
   ): string | undefined {
     return this._bundledDependencies[depName];
   }

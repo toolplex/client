@@ -329,21 +329,43 @@ export class ServerManager {
       if (!config.command)
         throw new Error("Command is required for stdio transport");
 
-      // Use RuntimeCheck to resolve the command, which prioritizes bundled dependencies
-      const { RuntimeCheck } = await import(
-        "../mcp-server/utils/runtimeCheck.js"
-      );
-      // Extract command name first (handles paths with spaces correctly)
-      const commandName = RuntimeCheck.extractCommandName(config.command);
-      const resolvedCommand = RuntimeCheck.resolveDependency(commandName);
+      // Use the inherited PATH from the parent process (MCP server -> Electron).
+      // This PATH already includes bundled bin directories prepended, so commands
+      // like "npx", "uvx", "git" will resolve to bundled versions first.
+      // We use process.env.PATH directly instead of rebuilding with getEnhancedPath()
+      // to preserve the bundled directories that were set up by Electron.
+      const inheritedPath = process.env.PATH || getEnhancedPath();
 
-      const enhancedPath = getEnhancedPath();
+      // For the command itself, resolve it properly handling the case where
+      // bundled npm/npx on Unix are .js scripts that need to be invoked via node.
+      let resolvedCommand = config.command;
+      let prependArgs: string[] = [];
+
+      if (
+        !config.command.startsWith("/") &&
+        !/^[A-Za-z]:[\\/]/.test(config.command)
+      ) {
+        // It's a relative command name (like "npx"), resolve via RuntimeCheck
+        const { RuntimeCheck } = await import(
+          "../mcp-server/utils/runtimeCheck.js"
+        );
+        const commandName = RuntimeCheck.extractCommandName(config.command);
+        const resolved = RuntimeCheck.resolveCommandWithArgs(commandName);
+        resolvedCommand = resolved.command;
+        prependArgs = resolved.prependArgs;
+      }
+
+      // Combine prependArgs with config.args
+      // e.g., if npx is a .js file: command="node", prependArgs=["/path/to/npx-cli.js"]
+      // then args become ["/path/to/npx-cli.js", "-y", "@wonderwhy-er/desktop-commander"]
+      const finalArgs = [...prependArgs, ...(config.args || [])];
+
       const serverParams: StdioServerParameters = {
         command: resolvedCommand,
-        args: config.args || [],
+        args: finalArgs,
         env: {
           ...(process.env as Record<string, string>),
-          PATH: enhancedPath,
+          PATH: inheritedPath,
           ...(config.env || {}),
         },
         stderr: "pipe",
