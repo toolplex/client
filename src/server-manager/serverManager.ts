@@ -5,6 +5,11 @@ import {
 } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import type {
+  jsonSchemaValidator,
+  JsonSchemaValidator,
+  JsonSchemaType,
+} from "@modelcontextprotocol/sdk/validation/types.js";
 import * as fs from "fs/promises";
 import * as path from "path";
 import { ServerConfig } from "../shared/mcpServerTypes.js";
@@ -12,6 +17,23 @@ import { FileLogger } from "../shared/fileLogger.js";
 import envPaths from "env-paths";
 import { InitializeResult } from "../shared/serverManagerTypes.js";
 import { getEnhancedPath } from "../shared/enhancedPath.js";
+import { version } from "../version.js";
+
+/**
+ * A permissive JSON Schema validator that doesn't fail on unresolved $ref.
+ * This is needed because MCP SDK 1.22.0 uses AJV which throws errors when
+ * output schemas have $ref references to $defs that aren't in the schema
+ * (e.g., "#/$defs/TextContent" from Pydantic/FastMCP-generated schemas).
+ */
+class PermissiveJsonSchemaValidator implements jsonSchemaValidator {
+  getValidator<T>(_schema: JsonSchemaType): JsonSchemaValidator<T> {
+    return (input: unknown) => ({
+      valid: true as const,
+      data: input as T,
+      errorMessage: undefined,
+    });
+  }
+}
 
 const logger = FileLogger;
 
@@ -334,7 +356,18 @@ export class ServerManager {
       // like "npx", "uvx", "git" will resolve to bundled versions first.
       // We use process.env.PATH directly instead of rebuilding with getEnhancedPath()
       // to preserve the bundled directories that were set up by Electron.
-      const inheritedPath = process.env.PATH || getEnhancedPath();
+      let inheritedPath = process.env.PATH || getEnhancedPath();
+
+      // When npx downloads and runs packages, it spawns child processes
+      // that need to find 'node' in PATH. The bundled node directory MUST be explicitly
+      // prepended to PATH to ensure child processes can find the node executable.
+      if (process.env.TOOLPLEX_NODE_PATH) {
+        const nodeDir = path.dirname(process.env.TOOLPLEX_NODE_PATH);
+        const pathDelimiter = process.platform === "win32" ? ";" : ":";
+        if (nodeDir && !inheritedPath.startsWith(nodeDir)) {
+          inheritedPath = nodeDir + pathDelimiter + inheritedPath;
+        }
+      }
 
       // For the command itself, resolve it properly handling the case where
       // bundled npm/npx on Unix are .js scripts that need to be invoked via node.
@@ -376,8 +409,10 @@ export class ServerManager {
     }
 
     const client = new Client(
-      { name: serverId, version: "1.0.0" },
-      { capabilities: { prompts: {}, resources: {}, tools: {} } },
+      { name: serverId, version },
+      {
+        jsonSchemaValidator: new PermissiveJsonSchemaValidator(),
+      },
     );
 
     try {
