@@ -71,6 +71,8 @@ export class ToolplexApiService {
       "x-client-mode": this.clientContext.clientMode,
       "x-client-name": this.clientContext.clientName,
       "x-client-version": this.clientContext.clientVersion,
+      "x-client-platform": os.platform(),
+      "x-client-arch": os.arch(),
     };
   }
 
