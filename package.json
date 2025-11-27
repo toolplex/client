@@ -1,6 +1,6 @@
 {
   "name": "@toolplex/client",
-  "version": "0.1.32",
+  "version": "0.1.33",
   "author": "ToolPlex LLC",
   "license": "SEE LICENSE IN LICENSE",
   "description": "The official ToolPlex client for AI agent tool discovery and execution",
@@ -44,7 +44,7 @@
     "ai-integration"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.22.0",
+    "@modelcontextprotocol/sdk": "^1.23.0",
     "@types/node": "^22.13.11",
     "@types/node-fetch": "^2.6.12",
     "@types/which": "^3.0.4",
