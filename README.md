@@ -1,15 +1,16 @@
 # ToolPlex Client
 
-[![Visit ToolPlex](https://img.shields.io/badge/ToolPlex.ai-%F0%9F%9A%80-blue?style=flat)](https://toolplex.ai)  
+[![Visit ToolPlex](https://img.shields.io/badge/ToolPlex.ai-%F0%9F%9A%80-blue?style=flat)](https://toolplex.ai)
 [![Discord](https://img.shields.io/badge/Join%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/KpCjj8ay)
 
-This repository contains the official **ToolPlex MCP server** — the npm package that enables AI agents to connect to the ToolPlex platform.
+This repository contains the official **ToolPlex MCP server** — the npm package that powers agent interaction with the ToolPlex network. It's the core of [ToolPlex Desktop](https://toolplex.ai) and works with any MCP-compatible client.
 
 ToolPlex is a curated tool ecosystem built for AI agents. With ToolPlex, your agent can:
-- 🔍 Discover 2,000+ high quality, open-source MCP tools
-- 🛠️ Install and run tools with your permission
-- 📚 Save workflows as reusable playbooks
-- 🔁 Learn from success — your agent evolves from collective agent feedback
+- Discover 4,000+ high quality, open-source MCP tools (and growing)
+- Automatically install and debug complex MCP servers — including fetching READMEs and resolving dependencies
+- Call any tool across any installed MCP server without loading every schema into context
+- Create and run playbooks (multi-step AI workflows) just by chatting
+- Learn from collective agent feedback to improve over time
 
 No complex setup. Just add ToolPlex to your AI client and start automating.
 
@@ -27,10 +28,14 @@ No complex setup. Just add ToolPlex to your AI client and start automating.
 
 ## Quick Setup
 
-**Claude Desktop (recommended)**  
+**ToolPlex Desktop (recommended)**
+
+Download [ToolPlex Desktop](https://toolplex.ai) — a native app with the ToolPlex client built-in. No configuration needed.
+
+**Claude Desktop or other MCP clients**
+
 1. Sign up for a [ToolPlex AI](https://toolplex.ai) account and create your first API key.
-2. Install [Claude Desktop](https://claude.ai/download).
-3. Add this to your `claude_desktop_config.json`:
+2. Add this to your MCP client config (e.g. `claude_desktop_config.json`):
 
 ```json
 {
@@ -46,7 +51,7 @@ No complex setup. Just add ToolPlex to your AI client and start automating.
 }
 ```
 
-Or use any AI chat client that [supports MCP](https://github.com/punkpeye/awesome-mcp-clients).
+Works with any AI client that [supports MCP](https://github.com/punkpeye/awesome-mcp-clients).
 
 ToolPlex works best as the **only server** in your MCP config, since it handles discovery, installation, and management of all other MCP servers on your behalf.
 
@@ -102,11 +107,12 @@ After initializing ToolPlex, just talk to your agent naturally:
 > save this as a playbook
 ```
 
-## LLM Compatability
-ToolPlex works better with generalist, high-context LLMs that support tool-calling, like:
-* `claude-sonnet-3.7`
-* `claude-sonnet-4`
-* `gpt-4o`
-* `gpt-4.1`
+## LLM Compatibility
+ToolPlex works best with high-context LLMs that support tool-calling:
+* Claude Sonnet 4.5, Opus 4.5, Haiku 4.5
+* GPT-5, GPT-5 Mini
+* Gemini 2.5 Pro, Gemini 3 Pro
+* Kimi K2, Kimi K2 Thinking
+* Grok 4
 
-Weaker reasoning models like `deepseek-chat` or `claude-haiku-3.5` can be used for simpler tasks (like running playbooks), but easily get confused with freeform ToolPlex usage.
+Lighter models like DeepSeek V3 or Qwen3 can handle simpler tasks (like running playbooks), but may struggle with complex freeform ToolPlex usage.
