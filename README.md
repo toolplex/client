@@ -1,5 +1,7 @@
 # ToolPlex Client
 
+[![npm version](https://img.shields.io/npm/v/@toolplex/client)](https://www.npmjs.com/package/@toolplex/client)
+[![npm downloads](https://img.shields.io/npm/dw/@toolplex/client)](https://www.npmjs.com/package/@toolplex/client)
 [![Visit ToolPlex](https://img.shields.io/badge/ToolPlex.ai-%F0%9F%9A%80-blue?style=flat)](https://toolplex.ai)
 [![Discord](https://img.shields.io/badge/Join%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/KpCjj8ay)
 
