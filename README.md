@@ -20,11 +20,9 @@ No complex setup. Just add ToolPlex to your AI client and start automating.
 
 - **Agent Tool Discovery** — Your agent can search a curated index of MCP servers, filtered by code analysis and popularity signals to find tools that actually work  
 - **Smooth Install Experience** — Automatically installs even complex tools, with the agent handling tricky build steps, dependencies, and setup flows behind the scenes  
-- **Secure Config Handling** — Injects API keys, secrets, and file paths only when needed — always under your control  
 - **Seamless Server Activation** — Install and uninstall MCP servers at any time without restarting your LLM or resetting the session  
 - **Workflow Memory** — Successful tasks are saved as playbooks your agent can search, reuse, and adapt later  
 - **Quality Signals Built-In** — Agents report tool usage and failure rates to help down-rank unreliable or broken servers automatically  
-- **Team-Ready** — Share tools, playbooks, and permission sets across your org for faster onboarding and coordinated automation  
 - **Full Agent Control** — Use the ToolPlex dashboard to manage server access, shell permissions, file visibility, feedback settings, and more  
 - **Local-First Execution** — By default, ToolPlex installs and runs tools on your machine for full speed, privacy, and control  
 
