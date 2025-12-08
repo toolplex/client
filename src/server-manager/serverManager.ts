@@ -37,6 +37,66 @@ class PermissiveJsonSchemaValidator implements jsonSchemaValidator {
 
 const logger = FileLogger;
 
+// Private registry constants
+const PRIVATE_REGISTRY_URL = "https://registry.toolplex.ai";
+const PRIVATE_SCOPE_PATTERN = /^@(tp-(user|org)-[a-f0-9]{11})\//;
+
+/**
+ * Extract the private registry scope from args if present.
+ * Returns the scope without @ (e.g., "tp-user-abc123def45") or null if not found.
+ */
+function extractPrivateRegistryScope(args: string[]): string | null {
+  for (const arg of args) {
+    const match = arg.match(PRIVATE_SCOPE_PATTERN);
+    if (match) {
+      return match[1]; // e.g., "tp-user-abc123def45"
+    }
+  }
+  return null;
+}
+
+/**
+ * Build npm config env vars for private registry authentication.
+ *
+ * Uses Basic auth (_auth) instead of _authToken because:
+ * - _authToken expects a token issued by Verdaccio (JWT)
+ * - _auth sends username:password on every request, triggering authenticate()
+ *
+ * The Verdaccio auth plugin expects:
+ * - username: the scope without @ (e.g., "tp-user-abc123def45")
+ * - password: the ToolPlex API key (tp_live_xxx or tp_test_xxx)
+ *
+ * @param scope - The scope without @ (e.g., "tp-user-abc123def45")
+ * @param apiKey - The ToolPlex API key
+ */
+function getPrivateRegistryEnv(
+  scope: string,
+  apiKey: string,
+): Record<string, string> {
+  // Create base64-encoded "username:password" for Basic auth
+  // Username is the scope (e.g., "tp-user-abc123def45")
+  // Password is the API key
+  const auth = Buffer.from(`${scope}:${apiKey}`).toString("base64");
+
+  return {
+    // Set the registry for @tp-user-* and @tp-org-* scopes
+    // Note: Using npm_config_ prefix with special chars may not work on all systems
+    "npm_config_@tp-user:registry": PRIVATE_REGISTRY_URL,
+    "npm_config_@tp-org:registry": PRIVATE_REGISTRY_URL,
+    // Set Basic auth for the registry
+    // npm_config_//host/:_auth maps to //host/:_auth in .npmrc
+    "npm_config_//registry.toolplex.ai/:_auth": auth,
+  };
+}
+
+/**
+ * Get additional args to prepend for private registry packages.
+ * Uses --registry flag which is more reliable than env vars with special chars.
+ */
+function getPrivateRegistryArgs(): string[] {
+  return [`--registry=${PRIVATE_REGISTRY_URL}`];
+}
+
 export class ServerManager {
   private sessions: Map<string, Client>;
   private tools: Map<string, Tool[]>;
@@ -388,10 +448,35 @@ export class ServerManager {
         prependArgs = resolved.prependArgs;
       }
 
+      // Check if this is a private registry package and inject auth if needed
+      // Private packages have scopes like @tp-user-xxx/ or @tp-org-xxx/
+      let privateRegistryEnv: Record<string, string> = {};
+      let privateRegistryArgs: string[] = [];
+      const privateScope = extractPrivateRegistryScope(config.args || []);
+      if (privateScope) {
+        const apiKey = process.env.TOOLPLEX_API_KEY;
+        if (apiKey) {
+          privateRegistryEnv = getPrivateRegistryEnv(privateScope, apiKey);
+          privateRegistryArgs = getPrivateRegistryArgs();
+          await logger.debug(
+            `Injecting private registry auth for ${serverId} (scope: ${privateScope})`,
+          );
+        } else {
+          await logger.warn(
+            `Private registry package detected but no TOOLPLEX_API_KEY available`,
+          );
+        }
+      }
+
       // Combine prependArgs with config.args
       // e.g., if npx is a .js file: command="node", prependArgs=["/path/to/npx-cli.js"]
       // then args become ["/path/to/npx-cli.js", "-y", "@wonderwhy-er/desktop-commander"]
-      const finalArgs = [...prependArgs, ...(config.args || [])];
+      // For private registry packages, insert --registry flag after prependArgs but before package name
+      const finalArgs = [
+        ...prependArgs,
+        ...privateRegistryArgs,
+        ...(config.args || []),
+      ];
 
       const serverParams: StdioServerParameters = {
         command: resolvedCommand,
@@ -399,6 +484,7 @@ export class ServerManager {
         env: {
           ...(process.env as Record<string, string>),
           PATH: inheritedPath,
+          ...privateRegistryEnv,
           ...(config.env || {}),
         },
         stderr: "pipe",
