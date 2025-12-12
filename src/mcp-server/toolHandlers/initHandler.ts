@@ -155,8 +155,26 @@ export async function handleInitialize(
     await logger.debug("No session resume history provided (new session)");
   }
 
-  const allSucceeded = serverManagerInitResults.succeeded;
-  const allFailures = serverManagerInitResults.failures;
+  // Filter servers by policy (blocked + allowed)
+  const allSucceeded = policyEnforcer.filterServersByPolicy(
+    serverManagerInitResults.succeeded,
+    (s) => s.server_id,
+  );
+
+  // Also filter failures by policy
+  const failureEntries = Object.entries(serverManagerInitResults.failures);
+  const filteredFailureEntries = policyEnforcer.filterServersByPolicy(
+    failureEntries,
+    ([serverId]) => serverId,
+  );
+  const allFailures: Record<
+    string,
+    { error: string; server_name: string; server_id: string }
+  > = Object.fromEntries(filteredFailureEntries);
+
+  await logger.info(
+    `Filtered to ${allSucceeded.length} servers (policy enforced)`,
+  );
 
   // Initialize the serversCache with the succeeded servers
   serversCache.init(allSucceeded);

@@ -109,6 +109,24 @@ export class PolicyEnforcer {
   }
 
   /**
+   * Applies both blocked and allowed server filtering.
+   * First removes blocked servers, then filters to allowed servers (if set).
+   *
+   * @param servers List of objects containing server IDs
+   * @param getServerId Function that extracts the server ID from an object
+   * @returns Filtered list with policy applied
+   */
+  public filterServersByPolicy<T>(
+    servers: T[],
+    getServerId: (item: T) => string,
+  ): T[] {
+    if (!this.serverPolicy) {
+      throw new Error("PolicyEnforcer not initialized");
+    }
+    return this.serverPolicy.filterServersByPolicy(servers, getServerId);
+  }
+
+  /**
    * Get a reference to the CallToolObserver instance.
    */
   public getCallToolObserver(): CallToolObserver {

@@ -26,16 +26,28 @@ export class ServerPolicy {
 
   /**
    * Validates that a server is allowed.
+   * - For org users: if allowlist is empty/null, NO servers are allowed
+   * - For non-org users: if allowlist is empty/null, all servers are allowed
    *
    * @throws Error if attempting to use a server not in the allowed list
    */
   public enforceAllowedServerPolicy(serverId: string): void {
     const allowedServers = this.clientContext.permissions.allowed_mcp_servers;
-    if (
-      allowedServers &&
-      allowedServers.length > 0 &&
-      !allowedServers.includes(serverId)
-    ) {
+
+    // If allowlist is empty/null
+    if (!allowedServers || allowedServers.length === 0) {
+      // For org users: empty allowlist means NO servers approved
+      if (this.clientContext.isOrgUser) {
+        throw new Error(
+          `No tools have been approved for your organization yet. Please contact your admin to approve tools on the ToolPlex Dashboard.`,
+        );
+      }
+      // For non-org users: no restrictions
+      return;
+    }
+
+    // Check if server is in the allowlist
+    if (!allowedServers.includes(serverId)) {
       throw new Error(
         `Server "${serverId}" is not allowed for your account. Please adjust the Allowed MCP Servers permissions on the ToolPlex Dashboard if this is a mistake.`,
       );
@@ -85,5 +97,50 @@ export class ServerPolicy {
     return servers.filter(
       (server) => !this.blockedMcpServersSet.has(getServerId(server)),
     );
+  }
+
+  /**
+   * Filters servers to only include allowed servers (if allowlist is set).
+   * - For org users: if allowlist is empty/null, return NO servers (admin hasn't approved any)
+   * - For non-org users: if allowlist is empty/null, return all servers (no restrictions)
+   *
+   * @param servers List of objects containing server IDs
+   * @param getServerId Function that extracts the server ID from an object
+   * @returns Filtered list with only allowed servers
+   */
+  public filterToAllowedServers<T>(
+    servers: T[],
+    getServerId: (item: T) => string,
+  ): T[] {
+    const allowedServers = this.clientContext.permissions.allowed_mcp_servers;
+
+    // If no allowlist configured
+    if (!allowedServers || allowedServers.length === 0) {
+      // For org users: empty allowlist means NO servers approved yet
+      if (this.clientContext.isOrgUser) {
+        return [];
+      }
+      // For non-org users: no restrictions, return all
+      return servers;
+    }
+
+    const allowedSet = new Set(allowedServers);
+    return servers.filter((server) => allowedSet.has(getServerId(server)));
+  }
+
+  /**
+   * Applies both blocked and allowed server filtering.
+   * First removes blocked servers, then filters to allowed servers (if set).
+   *
+   * @param servers List of objects containing server IDs
+   * @param getServerId Function that extracts the server ID from an object
+   * @returns Filtered list with policy applied
+   */
+  public filterServersByPolicy<T>(
+    servers: T[],
+    getServerId: (item: T) => string,
+  ): T[] {
+    const withoutBlocked = this.filterBlockedMcpServers(servers, getServerId);
+    return this.filterToAllowedServers(withoutBlocked, getServerId);
   }
 }

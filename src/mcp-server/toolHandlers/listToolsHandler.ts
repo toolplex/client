@@ -101,9 +101,9 @@ export async function handleListTools(
           continue;
         }
 
-        // Filter out blocked servers
+        // Filter servers by policy (blocked + allowed)
         const serverEntries = Object.entries(parsed.data.tools);
-        const filteredEntries = policyEnforcer.filterBlockedMcpServers(
+        const filteredEntries = policyEnforcer.filterServersByPolicy(
           serverEntries,
           ([serverId]) => serverId,
         );

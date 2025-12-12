@@ -38,8 +38,8 @@ export async function handleListServers(): Promise<CallToolResult> {
       }
 
       if (parsed.data.servers && parsed.data.servers.length > 0) {
-        // Filter out blocked servers
-        const filteredServers = policyEnforcer.filterBlockedMcpServers(
+        // Filter servers by policy (blocked + allowed)
+        const filteredServers = policyEnforcer.filterServersByPolicy(
           parsed.data.servers,
           (server) => server.server_id,
         );
