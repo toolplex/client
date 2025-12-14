@@ -250,6 +250,25 @@ export async function handleInitialize(
     });
   }
 
+  // For org users with no tools approved yet, add explicit message
+  if (clientContext.isOrgUser && allSucceeded.length === 0) {
+    result.content.push({
+      type: "text",
+      text: "IMPORTANT: No tools have been approved for this organization yet. You cannot use any tools until an admin approves them. Do NOT hallucinate or make up tool capabilities - simply inform the user that no tools are currently available and they should contact their admin.",
+    });
+  }
+
+  // Add custom prompt / agent instructions for org users
+  if (clientContext.permissions.custom_prompt) {
+    result.content.push({
+      type: "text",
+      text:
+        "ORGANIZATION INSTRUCTIONS:\n" +
+        "The following instructions have been set by your organization's administrator. Follow these guidelines:\n\n" +
+        clientContext.permissions.custom_prompt,
+    });
+  }
+
   result.content.push({
     type: "text",
     text:

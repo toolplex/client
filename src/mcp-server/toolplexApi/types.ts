@@ -6,6 +6,7 @@ export interface ClientPermissions {
   use_desktop_commander: boolean;
   enable_read_only_mode: boolean;
   allowed_mcp_servers?: string[];
+  custom_prompt?: string;
 }
 
 export interface ClientFlags {
