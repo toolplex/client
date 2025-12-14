@@ -60,7 +60,7 @@ export interface CreatePlaybookRequest {
   domain?: string;
   keywords?: string[];
   requirements?: string[];
-  privacy?: "public" | "private";
+  privacy?: "public" | "private" | "organization";
   source_playbook_id?: string;
   fork_reason?: string;
 }

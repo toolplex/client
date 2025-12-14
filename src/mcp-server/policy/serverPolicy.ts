@@ -65,7 +65,13 @@ export class ServerPolicy {
     this.enforceAllowedServerPolicy(serverId);
 
     // Check if desktop commander is disabled and this is the desktop commander server
+    // Skip this check if the server is in the allowed list (admin explicitly approved it)
+    const allowedServers = this.clientContext.permissions.allowed_mcp_servers;
+    const isExplicitlyAllowed =
+      allowedServers && allowedServers.includes(serverId);
+
     if (
+      !isExplicitlyAllowed &&
       !this.clientContext.permissions.use_desktop_commander &&
       serverId === this.clientContext.flags.desktop_commander_server_id
     ) {

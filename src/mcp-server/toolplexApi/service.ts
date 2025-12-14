@@ -211,7 +211,7 @@ export class ToolplexApiService {
     domain?: string,
     keywords?: string[],
     requirements?: string[],
-    privacy?: "public" | "private",
+    privacy?: "public" | "private" | "organization",
     sourcePlaybookId?: string,
     forkReason?: string,
   ): Promise<CreatePlaybookResponse> {
