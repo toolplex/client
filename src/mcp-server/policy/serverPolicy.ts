@@ -55,28 +55,13 @@ export class ServerPolicy {
   }
 
   /**
-   * Validates that a server is not blocked before calling a tool on it.
-   * Also checks if desktop commander is enabled when calling tools on the desktop commander server.
+   * Validates that a server is allowed before calling a tool on it.
    *
-   * @throws Error if attempting to call a tool on a blocked server or if desktop commander is disabled
+   * @throws Error if attempting to call a tool on a blocked or disallowed server
    */
   public enforceCallToolPolicy(serverId: string): void {
     this.enforceBlockedServerPolicy(serverId);
     this.enforceAllowedServerPolicy(serverId);
-
-    // Check if desktop commander is disabled and this is the desktop commander server
-    // Skip this check if the server is in the allowed list (admin explicitly approved it)
-    const allowedServers = this.clientContext.permissions.allowed_mcp_servers;
-    const isExplicitlyAllowed =
-      allowedServers && allowedServers.includes(serverId);
-
-    if (
-      !isExplicitlyAllowed &&
-      !this.clientContext.permissions.use_desktop_commander &&
-      serverId === this.clientContext.flags.desktop_commander_server_id
-    ) {
-      throw new Error("Desktop Commander is disabled for your account");
-    }
   }
 
   /**
