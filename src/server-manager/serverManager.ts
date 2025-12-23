@@ -66,6 +66,9 @@ function extractPrivateRegistryScope(args: string[]): string | null {
  * - username: the scope without @ (e.g., "tp-user-abc123def45")
  * - password: the ToolPlex API key (tp_live_xxx or tp_test_xxx)
  *
+ * IMPORTANT: We also clear _authToken to override any expired tokens in the
+ * user's ~/.npmrc. This ensures our injected basic auth takes precedence.
+ *
  * @param scope - The scope without @ (e.g., "tp-user-abc123def45")
  * @param apiKey - The ToolPlex API key
  */
@@ -86,15 +89,25 @@ function getPrivateRegistryEnv(
     // Set Basic auth for the registry
     // npm_config_//host/:_auth maps to //host/:_auth in .npmrc
     "npm_config_//registry.toolplex.ai/:_auth": auth,
+    // Clear any existing _authToken from user's ~/.npmrc to prevent expired tokens
+    // from taking precedence over our injected basic auth
+    "npm_config_//registry.toolplex.ai/:_authToken": "",
   };
 }
 
 /**
  * Get additional args to prepend for private registry packages.
  * Uses --registry flag which is more reliable than env vars with special chars.
+ *
+ * IMPORTANT: We use --userconfig=/dev/null to completely ignore the user's ~/.npmrc.
+ * This prevents expired tokens in ~/.npmrc from interfering with our injected basic auth.
  */
 function getPrivateRegistryArgs(): string[] {
-  return [`--registry=${PRIVATE_REGISTRY_URL}`];
+  return [
+    `--registry=${PRIVATE_REGISTRY_URL}`,
+    // Ignore user's ~/.npmrc to prevent expired _authToken from taking precedence
+    `--userconfig=/dev/null`,
+  ];
 }
 
 export class ServerManager {
