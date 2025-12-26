@@ -15,6 +15,7 @@ export class ClientContext {
   private _flags: ClientFlags | null = null;
   private _isOrgUser: boolean | null = null;
   private _clientName: string | null = null;
+  private _userId: string | null = null; // For system keys to specify user context
 
   public get sessionId(): string {
     if (!this._sessionId) {
@@ -126,6 +127,19 @@ export class ClientContext {
 
   public set isOrgUser(isOrgUser: boolean) {
     this._isOrgUser = isOrgUser;
+  }
+
+  /**
+   * Optional user ID for system API keys to specify user context.
+   * Used for per-user telemetry tracking in cloud sessions.
+   * Returns null if not set (which is fine for regular client usage).
+   */
+  public get userId(): string | null {
+    return this._userId;
+  }
+
+  public set userId(id: string | null) {
+    this._userId = id;
   }
 
   public isInitialized(): boolean {

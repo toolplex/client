@@ -35,6 +35,8 @@ export interface ToolplexServerConfig {
     installs: Array<{ server_id: string }>;
     uninstalls: Array<{ server_id: string }>;
   };
+  /** Optional user ID for system API keys to specify user context (per-user telemetry) */
+  userId?: string;
 }
 
 // --------------------

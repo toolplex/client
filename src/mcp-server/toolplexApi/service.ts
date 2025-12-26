@@ -64,7 +64,7 @@ export class ToolplexApiService {
   }
 
   private getBaseHeaders(): Record<string, string> {
-    return {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
       Accept: "application/json",
       "x-api-key": this.clientContext.apiKey,
@@ -74,6 +74,14 @@ export class ToolplexApiService {
       "x-client-platform": os.platform(),
       "x-client-arch": os.arch(),
     };
+
+    // For system API keys (cloud-agent), include user ID for per-user telemetry
+    const userId = this.clientContext.userId;
+    if (userId) {
+      headers["x-user-id"] = userId;
+    }
+
+    return headers;
   }
 
   private getHeadersWithSession(): Record<string, string> {

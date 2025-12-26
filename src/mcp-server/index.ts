@@ -18,6 +18,8 @@ const clientMode: ClientMode =
   (process.env.TOOLPLEX_CLIENT_MODE as ClientMode) || "standard";
 const clientName: string = process.env.CLIENT_NAME || "unknown";
 const logLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) || "info";
+// Optional user ID for per-user telemetry (system API keys only)
+const userId: string | undefined = process.env.TOOLPLEX_USER_ID;
 
 // Read bundled dependency paths from environment variables
 // These are provided by the host application (e.g., Electron desktop)
@@ -72,6 +74,7 @@ const config: ToolplexServerConfig = {
   logLevel,
   bundledDependencies,
   sessionResumeHistory,
+  userId,
 };
 
 serve(config).catch(() => {
