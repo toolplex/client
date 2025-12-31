@@ -254,7 +254,7 @@ export async function handleInitialize(
   if (clientContext.isOrgUser && allSucceeded.length === 0) {
     result.content.push({
       type: "text",
-      text: "IMPORTANT: No tools have been approved for this organization yet. You cannot use any tools until an admin approves them. Do NOT hallucinate or make up tool capabilities - simply inform the user that no tools are currently available and they should contact their admin.",
+      text: "No tools are currently approved for this organization. Inform the user that tools will become available once an admin approves them.",
     });
   }
 
@@ -263,8 +263,7 @@ export async function handleInitialize(
     result.content.push({
       type: "text",
       text:
-        "ORGANIZATION INSTRUCTIONS:\n" +
-        "The following instructions have been set by your organization's administrator. Follow these guidelines:\n\n" +
+        "**Organization Guidelines:**\n" +
         clientContext.permissions.custom_prompt,
     });
   }
