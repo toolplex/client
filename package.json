@@ -1,6 +1,6 @@
 {
   "name": "@toolplex/client",
-  "version": "0.1.41",
+  "version": "0.1.42",
   "author": "ToolPlex LLC",
   "license": "SEE LICENSE IN LICENSE",
   "description": "The official ToolPlex client for AI agent tool discovery and execution",
