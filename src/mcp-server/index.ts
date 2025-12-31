@@ -14,8 +14,11 @@ FileLogger.initialize("mcp-server");
 
 const isDev: boolean = process.env.DEV === "true";
 const apiKey: string | undefined = process.env.TOOLPLEX_API_KEY;
+// CLIENT_MODE can come from ai-engine (automation mode) or TOOLPLEX_CLIENT_MODE (legacy)
 const clientMode: ClientMode =
-  (process.env.TOOLPLEX_CLIENT_MODE as ClientMode) || "standard";
+  (process.env.CLIENT_MODE as ClientMode) ||
+  (process.env.TOOLPLEX_CLIENT_MODE as ClientMode) ||
+  "standard";
 const clientName: string = process.env.CLIENT_NAME || "unknown";
 const logLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) || "info";
 // Optional user ID for per-user telemetry (system API keys only)

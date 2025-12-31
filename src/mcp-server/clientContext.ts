@@ -8,7 +8,7 @@ export class ClientContext {
   private _sessionId: string | null = null;
   private _dev: boolean | null = null;
   private _apiKey: string | null = null;
-  private _clientMode: "standard" | "restricted" | null = null;
+  private _clientMode: "standard" | "restricted" | "automation" | null = null;
   private _llmContext: LLMContext | null = null;
   private _clientVersion: string | null = null;
   private _permissions: ClientPermissions | null = null;
@@ -50,14 +50,14 @@ export class ClientContext {
     this._apiKey = key;
   }
 
-  public get clientMode(): "standard" | "restricted" {
+  public get clientMode(): "standard" | "restricted" | "automation" {
     if (!this._clientMode) {
       throw new Error("Client mode not set - ToolPlex not initialized");
     }
     return this._clientMode;
   }
 
-  public set clientMode(mode: "standard" | "restricted") {
+  public set clientMode(mode: "standard" | "restricted" | "automation") {
     this._clientMode = mode;
   }
 

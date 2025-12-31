@@ -1,7 +1,7 @@
 // src/types/types.ts
 import { z } from "zod";
 
-export type ClientMode = "standard" | "restricted";
+export type ClientMode = "standard" | "restricted" | "automation";
 export type LogLevel = "error" | "warn" | "info" | "debug";
 
 /**
