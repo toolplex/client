@@ -9,6 +9,23 @@ export interface ClientPermissions {
   custom_prompt?: string;
 }
 
+/**
+ * Automation context for HITL (Human-in-the-Loop) support.
+ * Passed when clientMode is 'automation' to enable tool approval and notifications.
+ */
+export interface AutomationContext {
+  automationId: string;
+  runId: string;
+  /** Tools that require user approval before execution (format: "server_id.tool_name") */
+  toolsRequiringApproval: string[];
+  /** Email address for notifications */
+  notificationEmail?: string;
+  /** Hours before HITL decisions expire (default 24) */
+  expirationHours: number;
+  /** Notification instructions from automation config */
+  notifyInstructions?: string;
+}
+
 export interface ClientFlags {
   desktop_commander_server_id: string;
   blocked_mcp_servers: string[];

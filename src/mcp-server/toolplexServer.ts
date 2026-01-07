@@ -28,6 +28,7 @@ import { handleLogPlaybookUsage } from "./toolHandlers/logPlaybookUsageHandler.j
 import { handleLookupEntityTool } from "./toolHandlers/lookupEntityHandler.js";
 import { handleSubmitFeedback } from "./toolHandlers/submitFeedbackHandler.js";
 import { handleGetServerConfig } from "./toolHandlers/getServerConfigHandler.js";
+import { handleNotify } from "./toolHandlers/notifyHandler.js";
 
 import { StdioServerManagerClient } from "../shared/stdioServerManagerClient.js";
 import { FileLogger } from "../shared/fileLogger.js";
@@ -44,6 +45,7 @@ import {
   LookupEntityParamsSchema,
   SubmitFeedbackParamsSchema,
   GetServerConfigParamsSchema,
+  NotifyParamsSchema,
 } from "../shared/mcpServerTypes.js";
 
 import { version as clientVersion } from "../version.js";
@@ -60,6 +62,10 @@ export async function serve(config: ToolplexServerConfig): Promise<void> {
   clientContext.clientVersion = clientVersion;
   if (config.userId) {
     clientContext.userId = config.userId;
+  }
+  // Set automation context for HITL support (only in automation mode)
+  if (config.automationContext) {
+    clientContext.automationContext = config.automationContext;
   }
 
   await Registry.init(clientContext);
@@ -308,6 +314,18 @@ export async function serve(config: ToolplexServerConfig): Promise<void> {
               `Invalid get_server_config params: ${parsed.error}`,
             );
           result = await handleGetServerConfig(parsed.data);
+          break;
+        }
+
+        // Notify tool handler (automation mode only)
+        case "notify": {
+          await logger.debug("Handling notify request");
+          const parsed = NotifyParamsSchema.safeParse(params);
+          if (!parsed.success)
+            throw new Error(`Invalid notify params: ${parsed.error}`);
+          if (!clientContext.isInitialized())
+            throw new Error(`ToolPlex is not initialized`);
+          result = await handleNotify(parsed.data);
           break;
         }
 

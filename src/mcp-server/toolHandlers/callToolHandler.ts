@@ -43,6 +43,35 @@ export async function handleCallTool(
     // Enforce call tool policy
     policyEnforcer.enforceCallToolPolicy(params.server_id);
 
+    // Automation mode: Check if tool requires HITL approval
+    const automationContext = clientContext.automationContext;
+    if (automationContext) {
+      const toolKey = `${params.server_id}.${params.tool_name}`;
+
+      // Check if tool requires HITL approval
+      if (automationContext.toolsRequiringApproval.includes(toolKey)) {
+        await logger.info(`Tool ${toolKey} requires HITL approval`);
+
+        // Return HITL signal for cloud-agent to handle
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                _hitl_required: true,
+                _hitl_type: "tool_approval",
+                tool_key: toolKey,
+                server_id: params.server_id,
+                tool_name: params.tool_name,
+                args: params.arguments,
+                context: `Requesting approval to run "${params.tool_name}" on "${params.server_id}"`,
+              }),
+            },
+          ],
+        };
+      }
+    }
+
     const client = await findServerManagerClient(
       params.server_id,
       serverManagerClients,

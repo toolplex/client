@@ -1,5 +1,6 @@
 // src/types/types.ts
 import { z } from "zod";
+import type { AutomationContext } from "../mcp-server/toolplexApi/types.js";
 
 export type ClientMode = "standard" | "restricted" | "automation";
 export type LogLevel = "error" | "warn" | "info" | "debug";
@@ -37,6 +38,8 @@ export interface ToolplexServerConfig {
   };
   /** Optional user ID for system API keys to specify user context (per-user telemetry) */
   userId?: string;
+  /** Automation context for HITL support (only set in automation mode) */
+  automationContext?: AutomationContext;
 }
 
 // --------------------
@@ -259,3 +262,17 @@ export const SubmitFeedbackParamsSchema = z.object({
 });
 
 export type SubmitFeedbackParams = z.infer<typeof SubmitFeedbackParamsSchema>;
+
+// --------------------
+// NotifyParams (for automation HITL notifications)
+// --------------------
+export const NotifyParamsSchema = z.object({
+  title: z.string().max(100),
+  content: z.string(),
+  context: z.string().optional(),
+  response_type: z.enum(["boolean", "multi_choice", "freeform"]),
+  response_options: z.array(z.string()).optional(),
+  pause_until_response: z.boolean(),
+});
+
+export type NotifyParams = z.infer<typeof NotifyParamsSchema>;

@@ -1,5 +1,9 @@
 import { LLMContext } from "../shared/mcpServerTypes.js";
-import { ClientPermissions, ClientFlags } from "./toolplexApi/types.js";
+import {
+  ClientPermissions,
+  ClientFlags,
+  AutomationContext,
+} from "./toolplexApi/types.js";
 
 /**
  * Maintains client context for the ToolPlex server
@@ -16,6 +20,7 @@ export class ClientContext {
   private _isOrgUser: boolean | null = null;
   private _clientName: string | null = null;
   private _userId: string | null = null; // For system keys to specify user context
+  private _automationContext: AutomationContext | null = null; // For automation mode HITL
 
   public get sessionId(): string {
     if (!this._sessionId) {
@@ -140,6 +145,19 @@ export class ClientContext {
 
   public set userId(id: string | null) {
     this._userId = id;
+  }
+
+  /**
+   * Automation context for HITL (Human-in-the-Loop) support.
+   * Only set when clientMode is 'automation'.
+   * Contains allowed tools, tools requiring approval, and notification config.
+   */
+  public get automationContext(): AutomationContext | null {
+    return this._automationContext;
+  }
+
+  public set automationContext(context: AutomationContext | null) {
+    this._automationContext = context;
   }
 
   public isInitialized(): boolean {

@@ -7,6 +7,7 @@ import {
   BundledDependencies,
 } from "../shared/mcpServerTypes.js";
 import { FileLogger } from "../shared/fileLogger.js";
+import type { AutomationContext } from "./toolplexApi/types.js";
 
 dotenv.config();
 
@@ -65,6 +66,24 @@ if (process.env.TOOLPLEX_SESSION_RESUME_HISTORY) {
   }
 }
 
+// Parse automation context for HITL support (only in automation mode)
+let automationContext: AutomationContext | undefined;
+
+if (process.env.AUTOMATION_CONTEXT) {
+  try {
+    automationContext = JSON.parse(process.env.AUTOMATION_CONTEXT);
+
+    FileLogger.info(
+      `Parsed automation context - ` +
+        `automationId: ${automationContext?.automationId}, ` +
+        `runId: ${automationContext?.runId}, ` +
+        `toolsRequiringApproval: ${automationContext?.toolsRequiringApproval?.length || 0}`,
+    );
+  } catch (error) {
+    FileLogger.warn(`Failed to parse automation context: ${error}`);
+  }
+}
+
 if (!apiKey) {
   process.exit(1);
 }
@@ -78,6 +97,7 @@ const config: ToolplexServerConfig = {
   bundledDependencies,
   sessionResumeHistory,
   userId,
+  automationContext,
 };
 
 serve(config).catch(() => {
