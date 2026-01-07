@@ -48,8 +48,16 @@ export async function handleCallTool(
     if (automationContext) {
       const toolKey = `${params.server_id}.${params.tool_name}`;
 
-      // Check if tool requires HITL approval
-      if (automationContext.toolsRequiringApproval.includes(toolKey)) {
+      // Check if this is a pre-approved tool call (from HITL resume)
+      const isPreApproved =
+        automationContext.preApprovedToolCall?.server_id === params.server_id &&
+        automationContext.preApprovedToolCall?.tool_name === params.tool_name;
+
+      // Check if tool requires HITL approval (skip if pre-approved)
+      if (
+        !isPreApproved &&
+        automationContext.toolsRequiringApproval.includes(toolKey)
+      ) {
         await logger.info(`Tool ${toolKey} requires HITL approval`);
 
         // Return HITL signal for cloud-agent to handle
