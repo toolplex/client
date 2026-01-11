@@ -14,6 +14,9 @@ import {
   InitRequest,
   InitResponse,
   SearchResponse,
+  CreateAutomationNotificationRequest,
+  CreateAutomationNotificationResponse,
+  NotificationRecipient,
 } from "./types.js";
 import os from "os";
 import { ClientContext } from "../clientContext.js";
@@ -317,6 +320,111 @@ export class ToolplexApiService {
       return this.handleFetchResponse<FeedbackSummaryResponse>(response);
     } catch (err) {
       await logger.error(`Error getting feedback summary: ${err}`);
+      throw err;
+    }
+  }
+
+  /**
+   * Create an automation notification (HITL)
+   * Optionally pauses the automation run if pauseUntilResponse is true
+   *
+   * @returns Object with notificationId and paused status
+   */
+  public async createAutomationNotification(params: {
+    automationId: string;
+    runId: string;
+    sessionId?: string;
+    title: string;
+    content: string;
+    context?: string;
+    responseType: "boolean" | "multi_choice" | "freeform";
+    responseOptions?: string[];
+    pauseUntilResponse: boolean;
+    notificationRecipients: NotificationRecipient[];
+    expirationHours: number;
+  }): Promise<{ notificationId: string; paused: boolean }> {
+    const {
+      automationId,
+      runId,
+      sessionId,
+      title,
+      content,
+      context,
+      responseType,
+      responseOptions,
+      pauseUntilResponse,
+      notificationRecipients,
+      expirationHours,
+    } = params;
+
+    try {
+      // Create the notification
+      const notificationRequest: CreateAutomationNotificationRequest = {
+        automation_id: automationId,
+        run_id: runId,
+        session_id: sessionId,
+        notification_type: "agent_notify",
+        title,
+        content,
+        context,
+        response_type: responseType,
+        response_options: responseOptions,
+        requires_response: pauseUntilResponse,
+        notification_recipients: notificationRecipients,
+        expiration_hours: expirationHours,
+      };
+
+      const response = await fetch(
+        `${this.baseUrl}/cloud/automation-notifications`,
+        {
+          method: "POST",
+          headers: this.getHeadersWithSession(),
+          body: JSON.stringify(notificationRequest),
+        },
+      );
+
+      const notificationResult =
+        await this.handleFetchResponse<CreateAutomationNotificationResponse>(
+          response,
+        );
+
+      await logger.info(
+        `Created automation notification: ${notificationResult.id}`,
+      );
+
+      // If pause is requested, update the run status
+      if (pauseUntilResponse) {
+        const pauseResponse = await fetch(
+          `${this.baseUrl}/cloud/automation-runs/${runId}/pause`,
+          {
+            method: "POST",
+            headers: this.getHeadersWithSession(),
+            body: JSON.stringify({
+              status: "awaiting_response",
+              resume_context: {
+                pending_notification_id: notificationResult.id,
+                paused_at: new Date().toISOString(),
+              },
+            }),
+          },
+        );
+
+        if (!pauseResponse.ok) {
+          const errorText = await pauseResponse.text();
+          await logger.warn(
+            `Failed to pause automation run ${runId}: ${errorText}`,
+          );
+        } else {
+          await logger.info(`Automation run ${runId} paused awaiting response`);
+        }
+      }
+
+      return {
+        notificationId: notificationResult.id,
+        paused: pauseUntilResponse,
+      };
+    } catch (err) {
+      await logger.error(`Error creating automation notification: ${err}`);
       throw err;
     }
   }

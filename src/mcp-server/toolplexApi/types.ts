@@ -170,3 +170,41 @@ export interface SearchResponse {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   playbooks?: any[];
 }
+
+// ============================================================
+// AUTOMATION NOTIFICATIONS (HITL)
+// ============================================================
+
+export interface NotificationRecipient {
+  email: string;
+  name?: string;
+  role?: string;
+}
+
+export interface CreateAutomationNotificationRequest {
+  automation_id: string;
+  run_id: string;
+  session_id?: string;
+  notification_type: "agent_notify" | "tool_approval";
+  title: string;
+  content: string;
+  context?: string;
+  response_type: "boolean" | "multi_choice" | "freeform";
+  response_options?: string[];
+  requires_response: boolean;
+  notification_recipients: NotificationRecipient[];
+  expiration_hours: number;
+}
+
+export interface CreateAutomationNotificationResponse {
+  id: string;
+  decision_token: string;
+}
+
+export interface PauseAutomationRunRequest {
+  status: "awaiting_response";
+  resume_context: {
+    pending_notification_id: string;
+    paused_at: string;
+  };
+}

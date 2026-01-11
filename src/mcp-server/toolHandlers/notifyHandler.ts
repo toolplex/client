@@ -8,7 +8,7 @@ const logger = FileLogger;
 /**
  * Handler for the notify tool.
  * Only available in automation mode.
- * Returns an HITL signal for the cloud-agent to process.
+ * Creates a notification via the API and optionally pauses the automation.
  */
 export async function handleNotify(
   params: NotifyParams,
@@ -20,6 +20,7 @@ export async function handleNotify(
 
   const telemetryLogger = Registry.getTelemetryLogger();
   const clientContext = Registry.getClientContext();
+  const apiService = Registry.getToolplexApiService();
 
   try {
     // Verify we're in automation mode
@@ -57,35 +58,44 @@ export async function handleNotify(
       `Sending HITL notification: ${params.title} (pause: ${params.pause_until_response})`,
     );
 
+    // Call the API to create the notification (and pause if needed)
+    const result = await apiService.createAutomationNotification({
+      automationId: automationContext.automationId,
+      runId: automationContext.runId,
+      sessionId: clientContext.sessionId,
+      title: params.title,
+      content: params.content,
+      context: params.context,
+      responseType: params.response_type,
+      responseOptions: params.response_options,
+      pauseUntilResponse: params.pause_until_response,
+      notificationRecipients: [{ email: automationContext.notificationEmail }],
+      expirationHours: automationContext.expirationHours,
+    });
+
     await telemetryLogger.log("client_notify", {
       success: true,
       log_context: {
         response_type: params.response_type,
         pause_until_response: params.pause_until_response,
         has_context: !!params.context,
+        notification_id: result.notificationId,
       },
       latency_ms: Date.now() - startTime,
     });
 
-    // Return HITL signal for cloud-agent to handle
-    // The cloud-agent will parse this and create the notification
+    // Return simple result - cloud-agent checks for 'paused' flag
     return {
       content: [
         {
           type: "text",
           text: JSON.stringify({
-            _hitl_required: true,
-            _hitl_type: "agent_notify",
-            title: params.title,
-            content: params.content,
-            context: params.context,
-            response_type: params.response_type,
-            response_options: params.response_options,
-            pause_until_response: params.pause_until_response,
-            automation_id: automationContext.automationId,
-            run_id: automationContext.runId,
-            notification_email: automationContext.notificationEmail,
-            expiration_hours: automationContext.expirationHours,
+            success: true,
+            notificationId: result.notificationId,
+            paused: result.paused,
+            message: result.paused
+              ? "Notification sent. Automation paused awaiting response."
+              : "Notification sent. Automation continues.",
           }),
         },
       ],
