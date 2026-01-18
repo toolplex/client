@@ -115,12 +115,19 @@ export async function handleLookupEntityTool(
       } as { [x: string]: unknown; type: "text"; text: string },
     ];
 
-    if (params.entity_type === "server") {
-      content.push({
-        type: "text",
-        text: promptsCache.getPrompt("lookup_entity_install_guidance"),
-        _meta: { role: "system" },
-      } as { [x: string]: unknown; type: "text"; text: string });
+    // Add installation guidance for server lookups, but not for org users
+    // (org users don't have install tools - they use pre-approved tools only)
+    if (params.entity_type === "server" && !clientContext.isOrgUser) {
+      const installGuidance = promptsCache.getPrompt(
+        "lookup_entity_install_guidance",
+      );
+      if (installGuidance) {
+        content.push({
+          type: "text",
+          text: installGuidance,
+          _meta: { role: "system" },
+        } as { [x: string]: unknown; type: "text"; text: string });
+      }
     }
 
     return {

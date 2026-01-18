@@ -72,7 +72,7 @@ export async function handleCallTool(
                 server_id: params.server_id,
                 tool_name: params.tool_name,
                 args: params.arguments,
-                context: `Requesting approval to run "${params.tool_name}" on "${params.server_id}"`,
+                context: `Requesting approval to run "${params.tool_name}"`,
               }),
             },
           ],
