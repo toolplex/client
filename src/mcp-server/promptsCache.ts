@@ -25,7 +25,7 @@ export class PromptsCache {
     }
 
     const prompt = this._prompts[key];
-    if (!prompt) {
+    if (prompt === undefined) {
       throw new Error(`Prompt "${key}" not found in cache`);
     }
 

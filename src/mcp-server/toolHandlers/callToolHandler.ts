@@ -102,16 +102,6 @@ export async function handleCallTool(
 
     const result = parsed.data.result;
     const content = Array.isArray(result) ? result : [result];
-    if (
-      !clientContext.permissions.enable_read_only_mode &&
-      clientContext.clientMode !== "restricted"
-    ) {
-      content.push({
-        type: "text",
-        text: promptsCache.getPrompt("tool_call_next_steps"),
-        _meta: { role: "system" },
-      });
-    }
 
     await logger.debug("Tool called successfully");
 
