@@ -26,8 +26,6 @@ import { handleUninstallServer } from "./toolHandlers/uninstallServerHandler.js"
 import { handleSavePlaybook } from "./toolHandlers/savePlaybookHandler.js";
 import { handleLogPlaybookUsage } from "./toolHandlers/logPlaybookUsageHandler.js";
 import { handleLookupEntityTool } from "./toolHandlers/lookupEntityHandler.js";
-import { handleSubmitFeedback } from "./toolHandlers/submitFeedbackHandler.js";
-import { handleGetServerConfig } from "./toolHandlers/getServerConfigHandler.js";
 import { handleNotify } from "./toolHandlers/notifyHandler.js";
 
 import { StdioServerManagerClient } from "../shared/stdioServerManagerClient.js";
@@ -43,8 +41,6 @@ import {
   SavePlaybookParamsSchema,
   LogPlaybookUsageParamsSchema,
   LookupEntityParamsSchema,
-  SubmitFeedbackParamsSchema,
-  GetServerConfigParamsSchema,
   NotifyParamsSchema,
 } from "../shared/mcpServerTypes.js";
 
@@ -291,29 +287,6 @@ export async function serve(config: ToolplexServerConfig): Promise<void> {
           if (!parsed.success)
             throw new Error(`Invalid lookup_entity params: ${parsed.error}`);
           result = await handleLookupEntityTool(parsed.data);
-          break;
-        }
-
-        case "submit_feedback": {
-          await logger.debug("Handling submit_feedback request");
-          const parsed = SubmitFeedbackParamsSchema.safeParse(params);
-          if (!parsed.success)
-            throw new Error(`Invalid submit_feedback params: ${parsed.error}`);
-          if (!clientContext.isInitialized())
-            throw new Error(`ToolPlex is not initialized`);
-          result = await handleSubmitFeedback(parsed.data);
-          break;
-        }
-
-        // Add get_server_config tool handler
-        case "get_server_config": {
-          await logger.debug("Handling get_server_config request");
-          const parsed = GetServerConfigParamsSchema.safeParse(params);
-          if (!parsed.success)
-            throw new Error(
-              `Invalid get_server_config params: ${parsed.error}`,
-            );
-          result = await handleGetServerConfig(parsed.data);
           break;
         }
 

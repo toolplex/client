@@ -5,9 +5,6 @@ import {
   CreatePlaybookResponse,
   LogPlaybookUsageRequest,
   LogPlaybookUsageResponse,
-  SubmitFeedbackRequest,
-  SubmitFeedbackResponse,
-  SecurityAssessment,
   FeedbackSummaryResponse,
   LogTelemetryRequest,
   LogTelemetryBatchResponse,
@@ -275,37 +272,6 @@ export class ToolplexApiService {
       return this.handleFetchResponse<LogPlaybookUsageResponse>(response);
     } catch (err) {
       await logger.error(`Error logging playbook usage: ${err}`);
-      throw err;
-    }
-  }
-
-  public async submitFeedback(
-    targetType: "server" | "playbook",
-    targetId: string,
-    vote: "up" | "down",
-    message?: string,
-    securityAssessment?: SecurityAssessment,
-  ): Promise<SubmitFeedbackResponse> {
-    const requestBody: SubmitFeedbackRequest = {
-      target_type: targetType,
-      target_id: targetId,
-      vote,
-      message,
-      llm_context: this.clientContext.llmContext,
-      machine_context: this.machineContext,
-      security_assessment: securityAssessment,
-    };
-
-    try {
-      const response = await fetch(`${this.baseUrl}/feedback/submit`, {
-        method: "POST",
-        headers: this.getHeadersWithSession(),
-        body: JSON.stringify(requestBody),
-      });
-
-      return this.handleFetchResponse<SubmitFeedbackResponse>(response);
-    } catch (err) {
-      await logger.error(`Error submitting feedback: ${err}`);
       throw err;
     }
   }

@@ -53,20 +53,6 @@ export interface InitResponse {
   flags: ClientFlags;
 }
 
-export type SecurityFlag = string;
-
-export type RiskLevel = string;
-
-export interface CustomSecurityFlag {
-  custom_flag: string;
-}
-
-export interface SecurityAssessment {
-  security_flags: Array<SecurityFlag | CustomSecurityFlag>;
-  risk_assessment: RiskLevel;
-  context_note?: string;
-}
-
 export interface LlmContext {
   model_family: string;
   model_name: string;
@@ -100,26 +86,6 @@ export interface LogPlaybookUsageRequest {
 }
 
 export interface LogPlaybookUsageResponse {
-  success: boolean;
-}
-
-export interface SubmitFeedbackRequest {
-  target_type: "server" | "playbook";
-  target_id: string;
-  vote: "up" | "down";
-  message?: string;
-  llm_context: LlmContext;
-  machine_context: {
-    os: string;
-    arch: string;
-    memory_gb: number;
-    cpu_cores: string;
-  };
-  security_assessment?: SecurityAssessment;
-}
-
-export interface SubmitFeedbackResponse {
-  id: string;
   success: boolean;
 }
 

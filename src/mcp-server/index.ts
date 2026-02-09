@@ -39,7 +39,7 @@ const bundledDependencies: BundledDependencies = {
 };
 
 // Parse session resume history for restored chat sessions
-// This allows the enforcement layer to validate save_playbook and submit_feedback
+// This allows the enforcement layer to validate save_playbook
 // based on historical tool usage from the database
 let sessionResumeHistory:
   | {

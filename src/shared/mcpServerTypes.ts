@@ -139,15 +139,6 @@ export const ListToolsParamsSchema = z.object({
 export type ListToolplexToolsParams = z.infer<typeof ListToolsParamsSchema>;
 
 // --------------------
-// GetServerConfigParams
-// --------------------
-export const GetServerConfigParamsSchema = z.object({
-  server_id: z.string().optional(),
-});
-
-export type GetServerConfigParams = z.infer<typeof GetServerConfigParamsSchema>;
-
-// --------------------
 // CallToolParams
 // --------------------
 export const CallToolParamsSchema = z.object({
@@ -236,32 +227,6 @@ export const LogPlaybookUsageParamsSchema = z.object({
 export type LogPlaybookUsageParams = z.infer<
   typeof LogPlaybookUsageParamsSchema
 >;
-
-// --------------------
-// SubmitFeedbackParams
-// --------------------
-export const SubmitFeedbackParamsSchema = z.object({
-  target_type: z.enum(["server", "playbook"]),
-  target_id: z.string(),
-  vote: z.enum(["up", "down"]),
-  message: z.string().optional(),
-  security_assessment: z
-    .object({
-      security_flags: z.array(
-        z.union([
-          z.string(),
-          z.object({
-            custom_flag: z.string(),
-          }),
-        ]),
-      ),
-      risk_assessment: z.string(),
-      context_note: z.string().optional(),
-    })
-    .optional(),
-});
-
-export type SubmitFeedbackParams = z.infer<typeof SubmitFeedbackParamsSchema>;
 
 // --------------------
 // NotifyParams (for automation HITL notifications)

@@ -1,17 +1,12 @@
 import { ClientContext } from "../clientContext.js";
 import { PlaybookPolicy } from "./playbookPolicy.js";
-import { FeedbackPolicy } from "./feedbackPolicy.js";
 import CallToolObserver from "./callToolObserver.js";
 import InstallObserver from "./installObserver.js";
-import {
-  SavePlaybookParams,
-  SubmitFeedbackParams,
-} from "../../shared/mcpServerTypes.js";
+import { SavePlaybookParams } from "../../shared/mcpServerTypes.js";
 import { ServerPolicy } from "./serverPolicy.js";
 
 export class PolicyEnforcer {
   private playbookPolicy: PlaybookPolicy | null = null;
-  private feedbackPolicy: FeedbackPolicy | null = null;
   private serverPolicy: ServerPolicy | null = null;
   private callToolObserver: CallToolObserver | null = null;
   private installObserver: InstallObserver | null = null;
@@ -28,11 +23,6 @@ export class PolicyEnforcer {
       clientContext,
       this.callToolObserver,
     );
-    this.feedbackPolicy = new FeedbackPolicy(
-      clientContext,
-      this.callToolObserver,
-      this.installObserver,
-    );
     this.serverPolicy = new ServerPolicy(clientContext);
   }
 
@@ -45,17 +35,6 @@ export class PolicyEnforcer {
       throw new Error("PolicyEnforcer not initialized");
     }
     this.playbookPolicy.enforceSavePlaybookPolicy(playbook);
-  }
-
-  /**
-   * Enforce feedback policy validation.
-   * Throws if the feedback does not pass policy.
-   */
-  public enforceFeedbackPolicy(feedback: SubmitFeedbackParams): void {
-    if (!this.feedbackPolicy) {
-      throw new Error("PolicyEnforcer not initialized");
-    }
-    this.feedbackPolicy.enforceFeedbackPolicy(feedback);
   }
 
   /**

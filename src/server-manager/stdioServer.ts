@@ -143,18 +143,6 @@ export class ServerManagerProtocol {
         return { server_id: list_tools_params.server_id, server_name, tools };
       }
 
-      case "get_server_config": {
-        if (!params || typeof params.server_id !== "string") {
-          throw new Error("Missing or invalid server_id");
-        }
-        await logger.debug(`Getting config for server ${params.server_id}`);
-        // Just return the config directly
-        const config = await this.serverManager.getServerConfig(
-          params.server_id,
-        );
-        return config;
-      }
-
       case "call_tool": {
         const call_tool_params = CallToolParamsSchema.parse(params);
         await logger.debug(
