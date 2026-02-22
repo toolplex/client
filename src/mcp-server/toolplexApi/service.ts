@@ -52,6 +52,9 @@ export class ToolplexApiService {
   }
 
   private getBaseUrl(dev: boolean): string {
+    if (process.env.TOOLPLEX_API_BASE_URL) {
+      return process.env.TOOLPLEX_API_BASE_URL;
+    }
     return dev ? "http://localhost:8080" : "https://api.toolplex.ai";
   }
 
