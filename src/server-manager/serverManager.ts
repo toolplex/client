@@ -38,7 +38,8 @@ class PermissiveJsonSchemaValidator implements jsonSchemaValidator {
 const logger = FileLogger;
 
 // Private registry constants
-const PRIVATE_REGISTRY_URL = "https://registry.toolplex.ai";
+const PRIVATE_REGISTRY_URL =
+  process.env.TOOLPLEX_REGISTRY_URL || "https://registry.toolplex.ai";
 const PRIVATE_SCOPE_PATTERN = /^@(tp-(user|org)-[a-f0-9]{11})\//;
 
 /**
@@ -81,6 +82,7 @@ function getPrivateRegistryEnv(
   // Password is the API key
   const auth = Buffer.from(`${scope}:${apiKey}`).toString("base64");
 
+  const registryHost = new URL(PRIVATE_REGISTRY_URL).host;
   return {
     // Set the registry for @tp-user-* and @tp-org-* scopes
     // Note: Using npm_config_ prefix with special chars may not work on all systems
@@ -88,10 +90,10 @@ function getPrivateRegistryEnv(
     "npm_config_@tp-org:registry": PRIVATE_REGISTRY_URL,
     // Set Basic auth for the registry
     // npm_config_//host/:_auth maps to //host/:_auth in .npmrc
-    "npm_config_//registry.toolplex.ai/:_auth": auth,
+    [`npm_config_//${registryHost}/:_auth`]: auth,
     // Clear any existing _authToken from user's ~/.npmrc to prevent expired tokens
     // from taking precedence over our injected basic auth
-    "npm_config_//registry.toolplex.ai/:_authToken": "",
+    [`npm_config_//${registryHost}/:_authToken`]: "",
   };
 }
 
