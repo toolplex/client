@@ -12,6 +12,8 @@ import type {
 } from "@modelcontextprotocol/sdk/validation/types.js";
 import * as fs from "fs/promises";
 import * as path from "path";
+import * as os from "os";
+import { randomUUID } from "crypto";
 import { ServerConfig } from "../shared/mcpServerTypes.js";
 import { FileLogger } from "../shared/fileLogger.js";
 import envPaths from "env-paths";
@@ -57,7 +59,12 @@ function extractPrivateRegistryScope(args: string[]): string | null {
 }
 
 /**
- * Build npm config env vars for private registry authentication.
+ * Write a temporary .npmrc file for private registry authentication.
+ * Returns the path to the temp file.
+ *
+ * We use a file-based approach instead of npm_config_ env vars because npm
+ * silently ignores env vars with special characters (// and :) in their names,
+ * such as npm_config_//registry-host/:_auth.
  *
  * Uses Basic auth (_auth) instead of _authToken because:
  * - _authToken expects a token issued by Verdaccio (JWT)
@@ -66,50 +73,50 @@ function extractPrivateRegistryScope(args: string[]): string | null {
  * The Verdaccio auth plugin expects:
  * - username: the scope without @ (e.g., "tp-user-abc123def45")
  * - password: the ToolPlex API key (tp_live_xxx or tp_test_xxx)
- *
- * IMPORTANT: We also clear _authToken to override any expired tokens in the
- * user's ~/.npmrc. This ensures our injected basic auth takes precedence.
- *
- * @param scope - The scope without @ (e.g., "tp-user-abc123def45")
- * @param apiKey - The ToolPlex API key
  */
-function getPrivateRegistryEnv(
+async function writePrivateRegistryNpmrc(
   scope: string,
   apiKey: string,
-): Record<string, string> {
-  // Create base64-encoded "username:password" for Basic auth
-  // Username is the scope (e.g., "tp-user-abc123def45")
-  // Password is the API key
+): Promise<string> {
   const auth = Buffer.from(`${scope}:${apiKey}`).toString("base64");
-
   const registryHost = new URL(PRIVATE_REGISTRY_URL).host;
-  return {
-    // Set the registry for @tp-user-* and @tp-org-* scopes
-    // Note: Using npm_config_ prefix with special chars may not work on all systems
-    "npm_config_@tp-user:registry": PRIVATE_REGISTRY_URL,
-    "npm_config_@tp-org:registry": PRIVATE_REGISTRY_URL,
-    // Set Basic auth for the registry
-    // npm_config_//host/:_auth maps to //host/:_auth in .npmrc
-    [`npm_config_//${registryHost}/:_auth`]: auth,
-    // Clear any existing _authToken from user's ~/.npmrc to prevent expired tokens
-    // from taking precedence over our injected basic auth
-    [`npm_config_//${registryHost}/:_authToken`]: "",
-  };
+
+  const npmrcContent = [
+    `@tp-user:registry=${PRIVATE_REGISTRY_URL}`,
+    `@tp-org:registry=${PRIVATE_REGISTRY_URL}`,
+    `//${registryHost}/:_auth=${auth}`,
+    "",
+  ].join("\n");
+
+  const tmpFile = path.join(
+    os.tmpdir(),
+    `.npmrc-toolplex-${randomUUID()}`,
+  );
+  await fs.writeFile(tmpFile, npmrcContent, { mode: 0o600 });
+  return tmpFile;
 }
 
 /**
- * Get additional args to prepend for private registry packages.
- * Uses --registry flag which is more reliable than env vars with special chars.
- *
- * IMPORTANT: We use --userconfig=/dev/null to completely ignore the user's ~/.npmrc.
- * This prevents expired tokens in ~/.npmrc from interfering with our injected basic auth.
+ * Get additional args for private registry packages.
+ * Points --userconfig to a temp .npmrc file with auth credentials.
  */
-function getPrivateRegistryArgs(): string[] {
+function getPrivateRegistryArgs(npmrcPath: string): string[] {
   return [
     `--registry=${PRIVATE_REGISTRY_URL}`,
-    // Ignore user's ~/.npmrc to prevent expired _authToken from taking precedence
-    `--userconfig=/dev/null`,
+    `--userconfig=${npmrcPath}`,
   ];
+}
+
+/**
+ * Clean up a temporary .npmrc file. Silently ignores errors.
+ */
+async function cleanupNpmrc(npmrcPath: string | null): Promise<void> {
+  if (!npmrcPath) return;
+  try {
+    await fs.unlink(npmrcPath);
+  } catch {
+    // Ignore - file may already be deleted or never created
+  }
 }
 
 export class ServerManager {
@@ -417,6 +424,7 @@ export class ServerManager {
     }
 
     let transport;
+    let npmrcPath: string | null = null;
     const stderrBuffer: string[] = [];
 
     if (config.transport === "sse") {
@@ -465,16 +473,15 @@ export class ServerManager {
 
       // Check if this is a private registry package and inject auth if needed
       // Private packages have scopes like @tp-user-xxx/ or @tp-org-xxx/
-      let privateRegistryEnv: Record<string, string> = {};
       let privateRegistryArgs: string[] = [];
       const privateScope = extractPrivateRegistryScope(config.args || []);
       if (privateScope) {
         const apiKey = process.env.TOOLPLEX_API_KEY;
         if (apiKey) {
-          privateRegistryEnv = getPrivateRegistryEnv(privateScope, apiKey);
-          privateRegistryArgs = getPrivateRegistryArgs();
+          npmrcPath = await writePrivateRegistryNpmrc(privateScope, apiKey);
+          privateRegistryArgs = getPrivateRegistryArgs(npmrcPath);
           await logger.debug(
-            `Injecting private registry auth for ${serverId} (scope: ${privateScope})`,
+            `Injecting private registry auth for ${serverId} (scope: ${privateScope}, npmrc: ${npmrcPath})`,
           );
         } else {
           await logger.warn(
@@ -499,7 +506,6 @@ export class ServerManager {
         env: {
           ...(process.env as Record<string, string>),
           PATH: inheritedPath,
-          ...privateRegistryEnv,
           ...(config.env || {}),
         },
         stderr: "pipe",
@@ -579,6 +585,9 @@ export class ServerManager {
       }
 
       throw new Error(enhancedError);
+    } finally {
+      // Clean up temp .npmrc file (npm reads it at startup, no longer needed)
+      await cleanupNpmrc(npmrcPath);
     }
   }
 
