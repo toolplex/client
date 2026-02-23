@@ -88,10 +88,7 @@ async function writePrivateRegistryNpmrc(
     "",
   ].join("\n");
 
-  const tmpFile = path.join(
-    os.tmpdir(),
-    `.npmrc-toolplex-${randomUUID()}`,
-  );
+  const tmpFile = path.join(os.tmpdir(), `.npmrc-toolplex-${randomUUID()}`);
   await fs.writeFile(tmpFile, npmrcContent, { mode: 0o600 });
   return tmpFile;
 }
@@ -101,10 +98,7 @@ async function writePrivateRegistryNpmrc(
  * Points --userconfig to a temp .npmrc file with auth credentials.
  */
 function getPrivateRegistryArgs(npmrcPath: string): string[] {
-  return [
-    `--registry=${PRIVATE_REGISTRY_URL}`,
-    `--userconfig=${npmrcPath}`,
-  ];
+  return [`--registry=${PRIVATE_REGISTRY_URL}`, `--userconfig=${npmrcPath}`];
 }
 
 /**
@@ -542,11 +536,7 @@ export class ServerManager {
         description,
       };
 
-      const currentConfig = await this.loadConfig();
-      await this.saveConfig({
-        ...currentConfig,
-        [serverId]: updatedEntry,
-      });
+      await this.saveConfig({ [serverId]: updatedEntry });
 
       this.config[serverId] = updatedEntry;
 
@@ -680,26 +670,39 @@ export class ServerManager {
     // Remove the server from memory
     await this.removeServer(serverId);
 
-    // Remove the server from the config file
-    let config: Record<string, ServerConfig> = {};
-    try {
-      const data = await fs.readFile(this.configPath, "utf-8");
-      config = JSON.parse(data);
-    } catch (error) {
-      // If config file doesn't exist, nothing to do
-      await logger.debug(
-        `Could not read existing config for uninstall: ${error}`,
-      );
-      return;
-    }
+    // Remove the server from the config file (use configLock for safety)
+    this.configLock = this.configLock.then(async () => {
+      let config: Record<string, ServerConfig> = {};
+      try {
+        const data = await fs.readFile(this.configPath, "utf-8");
+        config = JSON.parse(data);
+      } catch (error) {
+        await logger.debug(
+          `Could not read existing config for uninstall: ${error}`,
+        );
+        return;
+      }
 
-    if (Object.prototype.hasOwnProperty.call(config, serverId)) {
-      delete config[serverId];
-      await fs.writeFile(this.configPath, JSON.stringify(config, null, 2));
-      await logger.debug(
-        `Removed server ${serverId} from config at ${this.configPath}`,
-      );
-    }
+      if (Object.prototype.hasOwnProperty.call(config, serverId)) {
+        delete config[serverId];
+        const tempPath = this.configPath + ".tmp";
+        try {
+          await fs.writeFile(tempPath, JSON.stringify(config, null, 2));
+          await fs.rename(tempPath, this.configPath);
+          await logger.debug(
+            `Removed server ${serverId} from config at ${this.configPath}`,
+          );
+        } catch (error) {
+          try {
+            await fs.unlink(tempPath);
+          } catch {
+            // Ignore cleanup errors
+          }
+          throw error;
+        }
+      }
+    });
+    await this.configLock;
 
     // Remove from in-memory config as well
     delete this.config[serverId];
@@ -728,8 +731,7 @@ export class ServerManager {
       description: string;
     }>
   > {
-    const config = await this.loadConfig();
-    return Object.entries(config).map(([id, cfg]) => ({
+    return Object.entries(this.config).map(([id, cfg]) => ({
       server_id: id,
       server_name: cfg.server_name || id,
       tool_count: this.tools.get(id)?.length || 0,
@@ -759,9 +761,7 @@ export class ServerManager {
   }
 
   async getServerConfig(serverId: string): Promise<ServerConfig> {
-    // Always reload config from disk to ensure up-to-date
-    const config = await this.loadConfig();
-    const serverConfig = config[serverId];
+    const serverConfig = this.config[serverId];
     if (!serverConfig) {
       throw new Error(`No config found for server ${serverId}`);
     }

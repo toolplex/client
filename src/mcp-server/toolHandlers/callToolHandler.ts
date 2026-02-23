@@ -11,11 +11,23 @@ import Registry from "../registry.js";
 
 const logger = FileLogger;
 
-function safeLength(obj: unknown): number {
-  try {
-    return JSON.stringify(obj).length;
-  } catch {
-    return -1;
+function estimateJsonSize(obj: unknown): number {
+  if (obj === null || obj === undefined) return 4;
+  switch (typeof obj) {
+    case "string":
+      return obj.length + 2;
+    case "number":
+    case "boolean":
+      return String(obj).length;
+    case "object":
+      if (Array.isArray(obj))
+        return obj.reduce((s, item) => s + estimateJsonSize(item) + 1, 2);
+      return Object.entries(obj as Record<string, unknown>).reduce(
+        (s, [k, v]) => s + k.length + 3 + estimateJsonSize(v) + 1,
+        2,
+      );
+    default:
+      return 0;
   }
 }
 
@@ -110,8 +122,8 @@ export async function handleCallTool(
       log_context: {
         server_id: sanitizeServerIdForLogging(params.server_id),
         tool_name: params.tool_name,
-        input_length: safeLength(params),
-        response_length: safeLength(content),
+        input_length: estimateJsonSize(params),
+        response_length: estimateJsonSize(content),
       },
       latency_ms: Date.now() - startTime,
     });

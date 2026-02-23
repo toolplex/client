@@ -8,6 +8,7 @@ import envPaths from "env-paths";
 import which from "which";
 import { getEnhancedPath } from "../../shared/enhancedPath.js";
 import * as fs from "fs";
+import * as fsPromises from "fs/promises";
 
 const logger = FileLogger;
 
@@ -32,6 +33,37 @@ export function resolveDependencyForInit(
   try {
     const enhancedPath = getEnhancedPath();
     const systemPath = which.sync(commandName, {
+      path: enhancedPath,
+      nothrow: true,
+    });
+    if (systemPath) {
+      return `${systemPath} (system)`;
+    }
+  } catch {
+    // Ignore errors, will return "not available"
+  }
+
+  return "not available";
+}
+
+async function resolveDependencyForInitAsync(
+  bundledPath: string | undefined,
+  commandName: string,
+): Promise<string> {
+  // Check bundled first
+  if (bundledPath) {
+    try {
+      await fsPromises.access(bundledPath);
+      return bundledPath;
+    } catch {
+      // Not found, fall through to system PATH
+    }
+  }
+
+  // Fall back to system PATH
+  try {
+    const enhancedPath = getEnhancedPath();
+    const systemPath = await which(commandName, {
       path: enhancedPath,
       nothrow: true,
     });
@@ -77,6 +109,24 @@ export async function handleInitialize(
   // Get bundled dependency information
   const bundledDeps = Registry.getBundledDependencies();
 
+  // Resolve dependency paths in parallel (bundled > system > not available)
+  const [nodePath, npxPath, pythonPath, pipPath, uvPath, uvxPath, gitPath] =
+    await Promise.all([
+      resolveDependencyForInitAsync(bundledDeps.node, "node"),
+      resolveDependencyForInitAsync(bundledDeps.npx, "npx"),
+      resolveDependencyForInitAsync(
+        bundledDeps.python,
+        platform === "win32" ? "python" : "python3",
+      ),
+      resolveDependencyForInitAsync(
+        bundledDeps.pip,
+        platform === "win32" ? "pip" : "pip3",
+      ),
+      resolveDependencyForInitAsync(bundledDeps.uv, "uv"),
+      resolveDependencyForInitAsync(bundledDeps.uvx, "uvx"),
+      resolveDependencyForInitAsync(bundledDeps.git, "git"),
+    ]);
+
   const systemInfo = {
     os: `${osName} ${os.release()}`,
     arch: os.arch(),
@@ -89,20 +139,13 @@ export async function handleInitialize(
       month: "long",
       day: "numeric",
     }),
-    // Resolve dependency paths with bundled > system > not available priority
-    nodePath: resolveDependencyForInit(bundledDeps.node, "node"),
-    npxPath: resolveDependencyForInit(bundledDeps.npx, "npx"),
-    pythonPath: resolveDependencyForInit(
-      bundledDeps.python,
-      platform === "win32" ? "python" : "python3",
-    ),
-    pipPath: resolveDependencyForInit(
-      bundledDeps.pip,
-      platform === "win32" ? "pip" : "pip3",
-    ),
-    uvPath: resolveDependencyForInit(bundledDeps.uv, "uv"),
-    uvxPath: resolveDependencyForInit(bundledDeps.uvx, "uvx"),
-    gitPath: resolveDependencyForInit(bundledDeps.git, "git"),
+    nodePath,
+    npxPath,
+    pythonPath,
+    pipPath,
+    uvPath,
+    uvxPath,
+    gitPath,
   };
 
   await logger.debug("Initializing server managers and API service");
@@ -191,48 +234,41 @@ export async function handleInitialize(
         type: "text",
         text: promptsCache
           .getPrompt("initialization")
-          .replace("{ARGS.os}", systemInfo.os)
-          .replace("{ARGS.arch}", systemInfo.arch)
-          .replace("{ARGS.memory}", systemInfo.memory)
-          .replace("{ARGS.cpuCores}", systemInfo.cpuCores.toString())
-          .replace("{ARGS.workDir}", systemInfo.workDir)
-          .replace("{ARGS.date}", systemInfo.date)
-          .replace("{ARGS.nodePath}", systemInfo.nodePath)
-          .replace("{ARGS.npxPath}", systemInfo.npxPath)
-          .replace("{ARGS.pythonPath}", systemInfo.pythonPath)
-          .replace("{ARGS.pipPath}", systemInfo.pipPath)
-          .replace("{ARGS.uvPath}", systemInfo.uvPath)
-          .replace("{ARGS.uvxPath}", systemInfo.uvxPath)
-          .replace("{ARGS.gitPath}", systemInfo.gitPath),
+          .replace(/\{ARGS\.(\w+)\}/g, (match, key) => {
+            const val = systemInfo[key as keyof typeof systemInfo];
+            return val !== undefined ? String(val) : match;
+          }),
       },
     ],
   };
 
   result.content.push({
     type: "text",
-    text: promptsCache
-      .getPrompt("initialization_results")
-      .replace(
-        "{SUCCEEDED}",
-        allSucceeded
-          .map((s) => `${s.server_id} (${s.server_name})`)
-          .join(", ") || "none",
-      )
-      .replace(
-        "{FAILURES}",
-        Object.entries(allFailures)
-          .map(
-            ([serverId, failure]) =>
-              `${serverId} (${failure.server_name}): ${failure.error}`,
-          )
-          .join(", ") || "none",
-      )
-      .replace(
-        "{FAILURE_NOTE}",
-        Object.keys(allFailures).length > 0
-          ? "Please note there were failures installing some servers. Inform the user."
-          : "",
-      ),
+    text: (() => {
+      const templateVars: Record<string, string> = {
+        SUCCEEDED:
+          allSucceeded
+            .map((s) => `${s.server_id} (${s.server_name})`)
+            .join(", ") || "none",
+        FAILURES:
+          Object.entries(allFailures)
+            .map(
+              ([serverId, failure]) =>
+                `${serverId} (${failure.server_name}): ${failure.error}`,
+            )
+            .join(", ") || "none",
+        FAILURE_NOTE:
+          Object.keys(allFailures).length > 0
+            ? "Please note there were failures installing some servers. Inform the user."
+            : "",
+      };
+      return promptsCache
+        .getPrompt("initialization_results")
+        .replace(/\{(\w+)\}/g, (match, key) => {
+          const val = templateVars[key];
+          return val !== undefined ? val : match;
+        });
+    })(),
   });
 
   if (

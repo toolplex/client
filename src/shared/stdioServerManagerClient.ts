@@ -6,6 +6,7 @@ export class StdioServerManagerClient {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private messageHandlers: Map<number, (result: any) => void>;
   private messageBuffer: string;
+  private nextRequestId = 1;
   private command: string;
   private args: string[];
   private env: NodeJS.ProcessEnv;
@@ -80,7 +81,7 @@ export class StdioServerManagerClient {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
     return new Promise((resolve, reject) => {
-      const id = Date.now();
+      const id = this.nextRequestId++;
       if (!this.serverProcess?.stdin) {
         reject(Error("Server process not started"));
       } else {
