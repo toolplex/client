@@ -46,9 +46,13 @@ export class PlaybookPolicy {
       // - "mcp_server_id:<server_id>::<tool_name>"
       // - "mcp_server_id:<server_id>"
       // - "playbook_id:<playbook_id>"
+      // - "builtin:<tool_name>"
       const call = action.call.trim();
 
-      if (call.startsWith("mcp_server_id:")) {
+      if (call.startsWith("builtin:")) {
+        // Built-in platform tools (web_search, fetch_page) — no server validation needed
+        continue;
+      } else if (call.startsWith("mcp_server_id:")) {
         // Could be with or without tool_name
         // e.g. mcp_server_id:abc123::toolX or mcp_server_id:abc123
         const match = call.match(/^mcp_server_id:([^:]+)(?:::([^:]+))?$/);
