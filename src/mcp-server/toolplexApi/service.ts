@@ -279,6 +279,50 @@ export class ToolplexApiService {
     }
   }
 
+  public async webSearch(
+    query: string,
+    numResults?: number,
+    searchType?: "search" | "news",
+  ): Promise<import("./types.js").WebSearchResponse> {
+    try {
+      const response = await fetch(`${this.baseUrl}/web-search/query`, {
+        method: "POST",
+        headers: this.getHeadersWithSession(),
+        body: JSON.stringify({
+          query,
+          num_results: numResults,
+          search_type: searchType,
+        }),
+      });
+
+      return this.handleFetchResponse<import("./types.js").WebSearchResponse>(
+        response,
+      );
+    } catch (err) {
+      await logger.error(`Error during web search: ${err}`);
+      throw err;
+    }
+  }
+
+  public async fetchPage(
+    url: string,
+  ): Promise<import("./types.js").FetchPageResponse> {
+    try {
+      const response = await fetch(`${this.baseUrl}/web-search/fetch-page`, {
+        method: "POST",
+        headers: this.getHeadersWithSession(),
+        body: JSON.stringify({ url }),
+      });
+
+      return this.handleFetchResponse<import("./types.js").FetchPageResponse>(
+        response,
+      );
+    } catch (err) {
+      await logger.error(`Error during fetch page: ${err}`);
+      throw err;
+    }
+  }
+
   public async getFeedbackSummary(): Promise<FeedbackSummaryResponse> {
     try {
       const response = await fetch(`${this.baseUrl}/feedback/summarize`, {

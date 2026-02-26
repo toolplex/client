@@ -138,6 +138,29 @@ export interface SearchResponse {
 }
 
 // ============================================================
+// WEB SEARCH
+// ============================================================
+
+export interface WebSearchResult {
+  title: string;
+  url: string;
+  snippet: string;
+  domain: string;
+}
+
+export interface WebSearchResponse {
+  results: WebSearchResult[];
+  query: string;
+  search_type: string;
+}
+
+export interface FetchPageResponse {
+  url: string;
+  content: string;
+  metadata: Record<string, string>;
+}
+
+// ============================================================
 // AUTOMATION NOTIFICATIONS (HITL)
 // ============================================================
 

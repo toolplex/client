@@ -27,6 +27,8 @@ import { handleSavePlaybook } from "./toolHandlers/savePlaybookHandler.js";
 import { handleLogPlaybookUsage } from "./toolHandlers/logPlaybookUsageHandler.js";
 import { handleLookupEntityTool } from "./toolHandlers/lookupEntityHandler.js";
 import { handleNotify } from "./toolHandlers/notifyHandler.js";
+import { handleWebSearch } from "./toolHandlers/webSearchHandler.js";
+import { handleFetchPage } from "./toolHandlers/fetchPageHandler.js";
 
 import { StdioServerManagerClient } from "../shared/stdioServerManagerClient.js";
 import { FileLogger } from "../shared/fileLogger.js";
@@ -42,6 +44,8 @@ import {
   LogPlaybookUsageParamsSchema,
   LookupEntityParamsSchema,
   NotifyParamsSchema,
+  WebSearchParamsSchema,
+  FetchPageParamsSchema,
 } from "../shared/mcpServerTypes.js";
 
 import { version as clientVersion } from "../version.js";
@@ -287,6 +291,24 @@ export async function serve(config: ToolplexServerConfig): Promise<void> {
           if (!parsed.success)
             throw new Error(`Invalid lookup_entity params: ${parsed.error}`);
           result = await handleLookupEntityTool(parsed.data);
+          break;
+        }
+
+        case "web_search": {
+          await logger.debug("Handling web_search request");
+          const parsed = WebSearchParamsSchema.safeParse(params);
+          if (!parsed.success)
+            throw new Error(`Invalid web_search params: ${parsed.error}`);
+          result = await handleWebSearch(parsed.data);
+          break;
+        }
+
+        case "fetch_page": {
+          await logger.debug("Handling fetch_page request");
+          const parsed = FetchPageParamsSchema.safeParse(params);
+          if (!parsed.success)
+            throw new Error(`Invalid fetch_page params: ${parsed.error}`);
+          result = await handleFetchPage(parsed.data);
           break;
         }
 

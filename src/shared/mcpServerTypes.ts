@@ -229,6 +229,26 @@ export type LogPlaybookUsageParams = z.infer<
 >;
 
 // --------------------
+// WebSearchParams
+// --------------------
+export const WebSearchParamsSchema = z.object({
+  query: z.string(),
+  num_results: z.number().int().min(1).max(10).optional(),
+  search_type: z.enum(["search", "news"]).optional(),
+});
+
+export type WebSearchParams = z.infer<typeof WebSearchParamsSchema>;
+
+// --------------------
+// FetchPageParams
+// --------------------
+export const FetchPageParamsSchema = z.object({
+  url: z.string(),
+});
+
+export type FetchPageParams = z.infer<typeof FetchPageParamsSchema>;
+
+// --------------------
 // NotifyParams (for automation HITL notifications)
 // --------------------
 export const NotifyParamsSchema = z.object({
