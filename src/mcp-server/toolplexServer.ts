@@ -67,6 +67,10 @@ export async function serve(config: ToolplexServerConfig): Promise<void> {
   if (config.automationContext) {
     clientContext.automationContext = config.automationContext;
   }
+  // Set host app version for feature gating
+  if (config.appVersion) {
+    clientContext.appVersion = config.appVersion;
+  }
 
   await Registry.init(clientContext);
 

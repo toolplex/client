@@ -84,6 +84,12 @@ export class ToolplexApiService {
       headers["x-user-id"] = userId;
     }
 
+    // For host app version gating (passed via cloud-agent)
+    const appVersion = this.clientContext.appVersion;
+    if (appVersion) {
+      headers["x-app-version"] = appVersion;
+    }
+
     return headers;
   }
 

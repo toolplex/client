@@ -24,6 +24,8 @@ const clientName: string = process.env.CLIENT_NAME || "unknown";
 const logLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) || "info";
 // Optional user ID for per-user telemetry (system API keys only)
 const userId: string | undefined = process.env.TOOLPLEX_USER_ID;
+// Host app version for feature gating (passed via cloud-agent)
+const appVersion: string | undefined = process.env.APP_VERSION;
 
 // Read bundled dependency paths from environment variables
 // These are provided by the host application (e.g., Electron desktop)
@@ -98,6 +100,7 @@ const config: ToolplexServerConfig = {
   sessionResumeHistory,
   userId,
   automationContext,
+  appVersion,
 };
 
 serve(config).catch(() => {

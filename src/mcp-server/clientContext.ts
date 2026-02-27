@@ -21,6 +21,7 @@ export class ClientContext {
   private _clientName: string | null = null;
   private _userId: string | null = null; // For system keys to specify user context
   private _automationContext: AutomationContext | null = null; // For automation mode HITL
+  private _appVersion: string | null = null; // Host app version for feature gating
 
   public get sessionId(): string {
     if (!this._sessionId) {
@@ -158,6 +159,19 @@ export class ClientContext {
 
   public set automationContext(context: AutomationContext | null) {
     this._automationContext = context;
+  }
+
+  /**
+   * Host app version for feature gating.
+   * When set, toolplex-api uses this to gate features like web search tools.
+   * Returns null if not set (e.g., direct SDK usage without a host app).
+   */
+  public get appVersion(): string | null {
+    return this._appVersion;
+  }
+
+  public set appVersion(version: string | null) {
+    this._appVersion = version;
   }
 
   public isInitialized(): boolean {

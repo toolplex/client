@@ -40,6 +40,8 @@ export interface ToolplexServerConfig {
   userId?: string;
   /** Automation context for HITL support (only set in automation mode) */
   automationContext?: AutomationContext;
+  /** Host app version for feature gating (e.g., web search tools) */
+  appVersion?: string;
 }
 
 // --------------------
