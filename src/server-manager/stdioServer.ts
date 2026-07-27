@@ -107,6 +107,11 @@ export class ServerManagerProtocol {
         return { succeeded, failures };
       }
 
+      case "warmup": {
+        await logger.info("Calling ServerManager.warmupAll()");
+        return await this.serverManager.warmupAll();
+      }
+
       case "install": {
         const install_params = InstallParamsSchema.parse(params);
         await logger.info(`Installing server ${install_params.server_id}`);

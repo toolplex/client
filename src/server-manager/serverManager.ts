@@ -267,6 +267,48 @@ export class ServerManager {
     return { succeeded, failures };
   }
 
+  /**
+   * Eagerly spawn every configured server so the first tool call doesn't pay
+   * the npx spawn + MCP handshake cost. Best-effort: per-server failures are
+   * logged and skipped — a server that fails warmup still gets the normal
+   * lazy install() retry on its first real tool call.
+   */
+  async warmupAll(): Promise<{ started: string[]; failed: string[] }> {
+    if (Object.keys(this.config).length === 0) {
+      this.config = await this.loadConfig();
+    }
+    const started: string[] = [];
+    const failed: string[] = [];
+    const entries = Object.entries(this.config);
+    const CONCURRENCY = 3;
+    for (let i = 0; i < entries.length; i += CONCURRENCY) {
+      await Promise.all(
+        entries.slice(i, i + CONCURRENCY).map(async ([serverId, config]) => {
+          if (this.sessions.has(serverId)) {
+            started.push(serverId);
+            return;
+          }
+          try {
+            await this.install(
+              serverId,
+              config.server_name || serverId,
+              config.description || "",
+              config,
+            );
+            started.push(serverId);
+          } catch (err) {
+            failed.push(serverId);
+            await logger.error(`Warmup install failed for ${serverId}: ${err}`);
+          }
+        }),
+      );
+    }
+    await logger.info(
+      `Server warmup complete: ${started.length} started, ${failed.length} failed`,
+    );
+    return { started, failed };
+  }
+
   async getServerName(serverId: string): Promise<string> {
     await logger.debug(`Getting name for server ${serverId}`);
     return this.serverNames.get(serverId) || serverId;

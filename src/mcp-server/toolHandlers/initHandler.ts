@@ -159,6 +159,24 @@ export async function handleInitialize(
     ],
   );
 
+  // Eager server warmup (cloud sessions only — the cloud-agent sets this env
+  // when spawning us). Spawn every configured server in the background so the
+  // agent's first tool call doesn't pay the npx spawn + handshake cost
+  // (1-10s). Desktop clients never set this: their configs can hold many
+  // servers a session may never touch. Fire-and-forget by design.
+  if (process.env.TOOLPLEX_EAGER_SERVER_START === "1") {
+    for (const [runtime, client] of Object.entries(serverManagerClients)) {
+      client
+        .sendRequest("warmup", {}, 120000)
+        .then((result) =>
+          logger.info(`Eager warmup (${runtime}): ${JSON.stringify(result)}`),
+        )
+        .catch((err) =>
+          logger.warn(`Eager warmup failed (${runtime}): ${err}`),
+        );
+    }
+  }
+
   clientContext.isOrgUser = toolplexApiInitResponse.is_org_user;
   clientContext.sessionId = toolplexApiInitResponse.session_id;
   clientContext.permissions = toolplexApiInitResponse.permissions;
